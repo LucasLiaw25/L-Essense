@@ -25,23 +25,50 @@ function addProduct(Product $product) {
     return $product;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (
-        empty($_POST['product_name']) || 
-        empty($_POST['product_description']) || 
-        empty($_POST['product_price']) || 
-        !isset($_POST['product_storage'])
-    ) {
-        $message = "<div class='alert error'>Erro: Todos os campos devem estar preenchidos!</div>";
-    } else {
-        $name = $_POST['product_name'];
-        $description = $_POST['product_description'];
-        $price = (float) str_replace(',', '.', $_POST['product_price']);
-        $storage = (int) $_POST['product_storage'];
+function updateProduct(Product $productRequest, int $id) {
+    $found = false;
+    foreach ($_SESSION['listProducts'] as $product) {
+        if ($product->id == $id) {
+            if (!empty($productRequest->name)) $product->name = $productRequest->name;
+            if (!empty($productRequest->description)) $product->description = $productRequest->description;
+            if ($productRequest->price > 0) $product->price = $productRequest->price;
+            if ($productRequest->storage >= 0) $product->storage = $productRequest->storage;
+            $found = true;
+            break;
+        }
+    }
+    return $found;
+}
 
-        $product = new Product($name, $description, $price, $storage);
-        addProduct($product);
-        $message = "<div class='alert success'>Produto cadastrado com sucesso!</div>";
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? 'create';
+
+    if ($action === 'create') {
+        if (empty($_POST['product_name']) || empty($_POST['product_description']) || empty($_POST['product_price'])) {
+            $message = "<div class='alert error'>Erro: Preencha os campos obrigatórios para cadastro!</div>";
+        } else {
+            $product = new Product(
+                $_POST['product_name'],
+                $_POST['product_description'],
+                (float) str_replace(',', '.', $_POST['product_price']),
+                (int) $_POST['product_storage']
+            );
+            addProduct($product);
+            $message = "<div class='alert success'>Produto cadastrado!</div>";
+        }
+    } elseif ($action === 'update') {
+        $id = (int) $_POST['product_id'];
+        $productReq = new Product(
+            $_POST['product_name'] ?? '',
+            $_POST['product_description'] ?? '',
+            (float) str_replace(',', '.', ($_POST['product_price'] ?? '0')),
+            (int) ($_POST['product_storage'] ?? 0)
+        );
+        if (updateProduct($productReq, $id)) {
+            $message = "<div class='alert success'>Produto #$id atualizado!</div>";
+        } else {
+            $message = "<div class='alert error'>Produto #$id não encontrado!</div>";
+        }
     }
 }
 ?>
@@ -50,138 +77,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciador de Estoque</title>
     <style>
         :root {
             --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text: #1e293b;
-            --text-light: #64748b;
+            --secondary: #0ea5e9;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #334155;
             --border: #e2e8f0;
-            --success: #22c55e;
-            --error: #ef4444;
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); padding: 2rem; }
-        .container { max-width: 1100px; margin: 0 auto; }
-        header { margin-bottom: 2rem; text-align: center; }
-        .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; }
-        @media (max-width: 850px) { .grid { grid-template-columns: 1fr; } }
-        .card {
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            border: 1px solid var(--border);
-        }
-        h2 { margin-bottom: 1.5rem; font-size: 1.25rem; color: var(--primary); }
-        .input-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; }
-        input, textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 1rem;
-            transition: border 0.2s;
-        }
-        input:focus { outline: none; border-color: var(--primary); }
-        .row { display: flex; gap: 1rem; }
-        .row .input-group { flex: 1; }
-        .btn-primary {
-            width: 100%;
-            background: var(--primary);
-            color: white;
-            padding: 0.8rem;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-primary:hover { background: var(--primary-hover); }
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
-        th { text-align: left; padding: 1rem; border-bottom: 2px solid var(--border); color: var(--text-light); font-size: 0.85rem; text-transform: uppercase; }
-        td { padding: 1rem; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
-        .alert { padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; text-align: center; font-weight: 600; }
-        .alert.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
+        .card { background: var(--card); padding: 20px; border-radius: 8px; border: 1px solid var(--border); height: fit-content; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #64748b; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; }
+        .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-update { background: var(--secondary); margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; background: #f8fafc; border-bottom: 2px solid var(--border); }
+        td { padding: 12px; border-bottom: 1px solid var(--border); }
+        .alert { padding: 15px; border-radius: 4px; margin-bottom: 20px; font-weight: bold; }
+        .success { background: #dcfce7; color: #166534; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .id-badge { background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h1>📦 Sistema de Produtos</h1>
-    </header>
-
     <?= $message ?>
-
     <div class="grid">
-        <section class="card">
-            <h2>Cadastrar Novo</h2>
+        <aside class="card">
+            <h2>Gerenciar</h2>
             <form method="POST">
+                <input type="hidden" name="action" id="form_action" value="create">
                 <div class="input-group">
-                    <label>Nome do Produto*</label>
-                    <input type="text" name="product_name" required>
+                    <label>ID do Produto (Apenas para atualizar)</label>
+                    <input type="number" name="product_id">
                 </div>
-
                 <div class="input-group">
-                    <label>Descrição*</label>
-                    <textarea name="product_description" rows="3" required></textarea>
+                    <label>Nome</label>
+                    <input type="text" name="product_name">
                 </div>
-
-                <div class="row">
-                    <div class="input-group">
-                        <label>Preço (R$)*</label>
-                        <input type="text" name="product_price" required placeholder="0.00">
-                    </div>
-                    <div class="input-group">
-                        <label>Estoque*</label>
-                        <input type="number" name="product_storage" required>
-                    </div>
+                <div class="input-group">
+                    <label>Descrição</label>
+                    <textarea name="product_description"></textarea>
                 </div>
-
-                <button type="submit" class="btn-primary">Adicionar Produto</button>
+                <div class="input-group">
+                    <label>Preço</label>
+                    <input type="text" name="product_price">
+                </div>
+                <div class="input-group">
+                    <label>Estoque</label>
+                    <input type="number" name="product_storage">
+                </div>
+                <button type="submit" name="action" value="create" class="btn-primary">Cadastrar</button>
+                <button type="submit" name="action" value="update" class="btn-primary btn-update">Atualizar por ID</button>
             </form>
-        </section>
+        </aside>
 
-        <section class="card">
-            <h2>Produtos Cadastrados</h2>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>Preço</th>
-                            <th>Estoque</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($_SESSION['listProducts'])): ?>
-                            <tr>
-                                <td colspan="4" style="text-align:center; padding: 20px;">Nenhum produto cadastrado.</td>
-                            </tr>
-                        <?php else: ?>
-                            <?php foreach ($_SESSION['listProducts'] as $p): ?>
-                                <tr>
-                                    <td>#<?= $p->id ?></td>
-                                    <td><strong><?= htmlspecialchars($p->name) ?></strong></td>
-                                    <td>R$ <?= number_format($p->price, 2, ',', '.') ?></td>
-                                    <td><?= $p->storage ?> un.</td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+        <main class="card">
+            <h2>Lista de Produtos</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Produto</th>
+                        <th>Descrição</th>
+                        <th>Preço</th>
+                        <th>Estoque</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($_SESSION['listProducts'] as $p): ?>
+                    <tr>
+                        <td><span class="id-badge">#<?= $p->id ?></span></td>
+                        <td><strong><?= htmlspecialchars($p->name) ?></strong></td>
+                        <td><?= htmlspecialchars($p->description) ?></td>
+                        <td>R$ <?= number_format($p->price, 2, ',', '.') ?></td>
+                        <td><?= $p->storage ?> un</td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </main>
     </div>
 </div>
 

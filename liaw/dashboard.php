@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         empty($_POST['product_price']) || 
         !isset($_POST['product_storage'])
     ) {
-        $message = "<div class='alert error'>Erro: Todos os campos devem ser preenchidos!</div>";
+        $message = "<div class='alert error'>Erro: Todos os campos devem estar preenchidos!</div>";
     } else {
         $name = $_POST['product_name'];
         $description = $_POST['product_description'];

@@ -1,0 +1,34 @@
+Product{
+    Integer id;
+    String name;
+    Integer storage;
+    Boolen active;
+    Double price;
+    String description;
+}
+
+User{
+    Integer id;
+    String name;
+    String email;
+    String password;
+    Boolen admin;
+}
+
+Order{
+    User user;
+    List<OrderItem>;
+    Double finalPrice;
+    Status status;
+}
+
+OrderItem{
+    Product product;
+    Integer quantity;
+}
+
+Status{
+    PENDING,
+    COMPLETE,
+    CANCELLED
+}

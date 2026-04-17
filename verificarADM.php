@@ -1,14 +1,8 @@
 <?php
-require_once 'VerificarADM.php';
+require_once 'VerificarLogin.php'; // Garante que está logado
 
-
-function usuarioEhAdmin() {
-    // Verifica se o nome do usuário na sessão é 'admin'
-    return (isset($_SESSION['usuario']) && $_SESSION['usuario'] === 'admin');
-}
-
-if (!usuarioEhAdmin()) {
-    // Redireciona para a dashboard com uma mensagem de erro na URL
+// Só permite o acesso se o perfil na sessão for 'admin'
+if (!isset($_SESSION['perfil']) || $_SESSION['perfil'] !== 'admin') {
     header("Location: dashboard.php?erro=sem_permissao");
     exit();
 }

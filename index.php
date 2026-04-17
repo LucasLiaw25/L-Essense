@@ -1,6 +1,6 @@
 <?php
 session_start();
-// Se o usuário já estiver logado, manda direto para a dashboard
+// Se já estiver logado, vai para a dashboard
 if(isset($_SESSION['logado']) && $_SESSION['logado'] === true){
     header("Location: dashboard.php");
     exit();
@@ -15,23 +15,31 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     $senha_digitada = $_POST['senha'] ?? '';
 
     if(empty($nome_digitado) || empty($email_digitado) || empty($senha_digitada)){
-        $erro = "Por favor, preencha todos os campos!";
+        $erro = "Por favor, preencha todos os campos para continuar!";
     } 
-    // 1. Verifica se o nome existe no array
-    elseif(isset($usuario_permitidos[$nome_digitado])) {
-        $dados_usuario = $usuario_permitidos[$nome_digitado];
-        
-        // 2. Verifica se o email e a senha batem com os dados desse usuário específico
-        if($email_digitado === $dados_usuario['email'] && $senha_digitada === $dados_usuario['senha']) {
+    else {
+        // Verifica se é o Admin (protegido por senha no array)
+        if(isset($usuario_permitidos[$nome_digitado])) {
+            $dados_usuario = $usuario_permitidos[$nome_digitado];
+            
+            if($email_digitado === $dados_usuario['email'] && $senha_digitada === $dados_usuario['senha']) {
+                $_SESSION['logado'] = true;
+                $_SESSION['usuario'] = $nome_digitado;
+                $_SESSION['perfil'] = 'admin'; // Identifica como administrador
+                header("Location: dashboard.php");
+                exit();
+            } else {
+                $erro = "Senha incorreta para o perfil de administrador.";
+            }
+        } 
+        else {
+            // LOGIN LIVRE: Qualquer outro usuário entra como 'cliente'
             $_SESSION['logado'] = true;
             $_SESSION['usuario'] = $nome_digitado;
+            $_SESSION['perfil'] = 'cliente'; 
             header("Location: dashboard.php");
             exit();
-        } else {
-            $erro = "E-mail ou senha incorretos para este usuário.";
         }
-    } else {
-        $erro = "Usuário não encontrado.";
     }
 }
 ?>

@@ -107,3 +107,34 @@ nav {
     border-radius: 4px;
     font-size: 0.9rem;
 }
+footer {
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+}
+
+footer span {
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+/* Ajuste para o corpo da dashboard */
+.dashboard-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ocupa no mínimo a altura toda da tela */
+    margin: 0;
+}
+
+/* O container principal cresce para ocupar o espaço vazio */
+.main-content {
+    flex: 1; 
+    padding: 20px;
+}
+
+/* Estilo do Rodapé */
+.footer-sistema {
+    background-color: #fff;
+    padding: 20px;
+    text-align: center;
+    border-top: 1px solid #ddd;
+    width: 100%;
+}

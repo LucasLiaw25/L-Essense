@@ -1,12 +1,13 @@
 <?php
 session_start();
-// Se já estiver logado, vai para a dashboard
+
+// Se já estiver logado, vai direto para a home
 if(isset($_SESSION['logado']) && $_SESSION['logado'] === true){
     header("Location: home.php");
     exit();
 }
 
-// Altere a linha 10 do seu login.php
+// Caminho atualizado para encontrar o arquivo de usuários na pasta auth
 include __DIR__ . '/../auth/usuario_permitidos.php';
 $erro = "";
 
@@ -19,18 +20,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         $erro = "Por favor, preencha todos os campos para continuar!";
     } 
     else {
-        // Verifica se é o Admin (protegido por senha no array)
         if(isset($usuario_permitidos[$nome_digitado])) {
             $dados_usuario = $usuario_permitidos[$nome_digitado];
             
             if($email_digitado === $dados_usuario['email'] && $senha_digitada === $dados_usuario['senha']) {
                 $_SESSION['logado'] = true;
                 $_SESSION['usuario'] = $nome_digitado;
-                $_SESSION['perfil'] = 'admin'; // Identifica como administrador
+                $_SESSION['perfil'] = 'admin'; 
                 header("Location: home.php");
                 exit();
             } else {
-                $erro = "Senha incorreta para o perfil de administrador.";
+                $erro = "Credenciais incorretas para administrador.";
             }
         } 
         else {
@@ -45,33 +45,72 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../style.css">
-    <title>Login</title>
+    <title>L-Essense - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-serif { font-family: 'Instrument Serif', serif; }
+    </style>
 </head>
-<div class="login-container">
-        <h1>Login</h1>
-        <?php if(!empty($erro)): ?>
-            <div class="erro-msg"><?php echo $erro; ?></div>
-        <?php endif; ?>
-        
-        <form method="POST">
-            <label>Nome:</label>
-            <input type="text" name="nome" placeholder="Usuario">
-            
-            <label>E-mail:</label>
-            <input type="email" name="Email" placeholder="exemplo@email.com">
-            
-            <label>Senha:</label>
-            <input type="password" name="senha" placeholder="**********">
-            
-            <button type="submit">Entrar</button>
-        </form>
+<body class="bg-stone-50 text-stone-900 h-screen flex items-center justify-center p-6">
+
+    <div class="w-full max-w-md">
+        <div class="text-center mb-10">
+            <h1 class="font-serif text-5xl italic text-stone-800 mb-2">L-Essense</h1>
+            <p class="text-[10px] font-black uppercase tracking-[0.3em] text-stone-400">Restaurante & Gestão</p>
+        </div>
+
+        <div class="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-stone-200/50 border border-stone-100">
+            <h2 class="text-xs font-black uppercase tracking-widest text-stone-400 mb-8 text-center">Identificação</h2>
+
+            <?php if(!empty($erro)): ?>
+                <div class="mb-6 flex items-center gap-2 p-4 bg-red-50 text-red-500 rounded-2xl text-xs font-bold border border-red-100 animate-shake">
+                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                    <?php echo $erro; ?>
+                </div>
+            <?php endif; ?>
+
+            <form method="POST" class="space-y-5">
+                <div>
+                    <label class="text-[10px] font-black uppercase tracking-wider text-stone-400 ml-2 mb-1 block">Nome de Usuário</label>
+                    <input type="text" name="nome" placeholder="Como deseja ser chamado?" 
+                        class="w-full px-6 py-4 bg-stone-50 border-transparent focus:border-stone-200 focus:bg-white focus:ring-0 rounded-2xl transition-all text-sm font-medium outline-none">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black uppercase tracking-wider text-stone-400 ml-2 mb-1 block">E-mail</label>
+                    <input type="email" name="Email" placeholder="seu@email.com" 
+                        class="w-full px-6 py-4 bg-stone-50 border-transparent focus:border-stone-200 focus:bg-white focus:ring-0 rounded-2xl transition-all text-sm font-medium outline-none">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black uppercase tracking-wider text-stone-400 ml-2 mb-1 block">Senha</label>
+                    <input type="password" name="senha" placeholder="••••••••" 
+                        class="w-full px-6 py-4 bg-stone-50 border-transparent focus:border-stone-200 focus:bg-white focus:ring-0 rounded-2xl transition-all text-sm font-medium outline-none">
+                </div>
+
+                <button type="submit" 
+                    class="w-full bg-stone-900 text-white font-black uppercase tracking-[0.2em] text-[11px] py-5 rounded-2xl hover:bg-black hover:scale-[0.02] active:scale-95 transition-all shadow-lg shadow-stone-200 mt-4 flex items-center justify-center gap-2">
+                    Entrar no Sistema
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+
+        <p class="text-center mt-10 text-[10px] font-bold text-stone-300 uppercase tracking-widest">
+            &copy; <?php echo date('Y'); ?> Boutique Experience
+        </p>
     </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>

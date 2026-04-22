@@ -8,7 +8,9 @@ require __DIR__ . '/../auth/VerificarLogin.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurante - Painel Principal</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -17,8 +19,9 @@ require __DIR__ . '/../auth/VerificarLogin.php';
 </head>
 <body class="bg-white text-stone-900 antialiased">
 
-    <div class="max-w-6xl mx-auto px-6">
-        <?php require 'menu.php'; ?>
+<div class="max-w-6xl mx-auto px-6">
+    <?php require 'menu.php'; ?>
+</div>
 
         <?php if (isset($_GET['erro']) && $_GET['erro'] === 'sem_permissao'): ?>
         <div class="mb-8 flex items-center gap-3 p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl animate-pulse">

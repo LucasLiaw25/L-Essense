@@ -9,9 +9,12 @@ require __DIR__ . '/../auth/VerificarLogin.php';
     <title>Restaurante - Painel Principal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     
     <script src="https://unpkg.com/lucide@latest"></script>
+    
     <style>
         body { font-family: 'Inter', sans-serif; }
         .font-serif { font-family: 'Instrument Serif', serif; }
@@ -77,7 +80,19 @@ require __DIR__ . '/../auth/VerificarLogin.php';
     </div>
     <?php include 'rodape.php' ?>
     <script>
+        // Inicializa os ícones
         lucide.createIcons();
+
+        // Faz o erro sumir após 5 segundos
+        const erroBox = document.querySelector('.animate-shake');
+        if (erroBox) {
+            setTimeout(() => {
+                erroBox.style.transition = "opacity 0.8s ease, transform 0.8s ease";
+                erroBox.style.opacity = "0";
+                erroBox.style.transform = "translateY(-10px)";
+                setTimeout(() => erroBox.remove(), 800);
+            }, 5000);
+        }
     </script>
 </body>
 </html>

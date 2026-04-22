@@ -6,8 +6,8 @@
             <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
                 <span class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400">
-                    Sistema Online 
-                    <span class="mx-2 text-stone-200">|</span> 
+                    Sistema Online
+                    <span class="mx-2 text-stone-200">|</span>
                     <?php echo $_SESSION['perfil'] === 'admin' ? 'Acesso Gestor' : 'Acesso Cliente'; ?>
                 </span>
             </div>

@@ -2,11 +2,12 @@
 session_start();
 // Se já estiver logado, vai para a dashboard
 if(isset($_SESSION['logado']) && $_SESSION['logado'] === true){
-    header("Location: dashboard.php");
+    header("Location: home.php");
     exit();
 }
 
-include 'usuario_permitidos.php';
+// Altere a linha 10 do seu login.php
+include __DIR__ . '/../auth/usuario_permitidos.php';
 $erro = "";
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
@@ -37,7 +38,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             $_SESSION['logado'] = true;
             $_SESSION['usuario'] = $nome_digitado;
             $_SESSION['perfil'] = 'cliente'; 
-            header("Location: dashboard.php");
+            header("Location: home.php");
             exit();
         }
     }
@@ -50,7 +51,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
     <title>Login</title>
 </head>
 <div class="login-container">

@@ -1,12 +1,12 @@
 <?php
-require 'VerificarLogin.php'; 
+require __DIR__ . '/../auth/VerificarLogin.php';
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <title>Restaurante - Painel</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
 </head>
 <body class="dashboard-body"> <nav>
         <span>Olá, <strong><?php echo $_SESSION['usuario']; ?></strong></span>

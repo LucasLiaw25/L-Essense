@@ -1,9 +1,9 @@
 <?php
-session_start(); // Localiza a sessão atual
-session_unset(); // Remove todas as variáveis de sessão
-session_destroy(); // Destrói a sessão completamente
+session_start(); 
+session_unset(); 
+session_destroy(); 
 
-// Redireciona para o index.php (sua tela de login)
-header("Location: user/login.php");
+// O ../ volta para a raiz L-Essense, e o user/ entra na pasta correta
+header("Location: ../user/login.php"); 
 exit();
 ?>

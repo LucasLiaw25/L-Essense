@@ -1,0 +1,140 @@
+/* Configurações Gerais */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #333;
+}
+
+/* Container do Login */
+.login-container {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #1a73e8;
+}
+
+/* Formulário */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+input {
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    border-color: #1a73e8;
+    outline: none;
+}
+
+button {
+    background-color: #1a73e8;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background-color: #1557b0;
+}
+
+/* Mensagens de Erro */
+.erro-msg {
+    background-color: #fce8e6;
+    color: #d93025;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+/* Menu e Dashboard */
+.dashboard-body {
+    display: block; /* Remove o flex do body para a dashboard */
+    padding: 20px;
+}
+
+nav {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-sair {
+    background-color: #dc3545;
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+footer {
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+}
+
+footer span {
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+/* Ajuste para o corpo da dashboard */
+.dashboard-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ocupa no mínimo a altura toda da tela */
+    margin: 0;
+}
+
+/* O container principal cresce para ocupar o espaço vazio */
+.main-content {
+    flex: 1; 
+    padding: 20px;
+}
+
+/* Estilo do Rodapé */
+.footer-sistema {
+    background-color: #fff;
+    padding: 20px;
+    text-align: center;
+    border-top: 1px solid #ddd;
+    width: 100%;
+}

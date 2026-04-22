@@ -7,6 +7,6 @@ require 'verificarADM.php'; // Se não for admin, ele é expulso para a dashboar
 <body>
     <h1>Área Restrita</h1>
     <p>Apenas o administrador vê isto.</p>
-    <a href="dashboard.php">Voltar</a>
+    <a href="home.php">Voltar</a>
 </body>
 </html>

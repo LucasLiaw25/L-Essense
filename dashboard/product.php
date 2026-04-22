@@ -1,7 +1,8 @@
 <?php
 declare(strict_types = 1);
 session_start();
-
+require '../auth/VerificarADM.php';
+include '../user/menu.php';
 class Product {
     public int $id;
     public function __construct(

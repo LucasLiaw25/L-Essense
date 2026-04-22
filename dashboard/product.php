@@ -123,6 +123,7 @@ foreach ($_SESSION['listProducts'] as $p) {
         body { font-family: 'Inter', sans-serif; background-color: #fafaf9; }
         .font-serif { font-family: 'Instrument Serif', serif; }
         .btn-delete:hover { color: #ef4444; background-color: #fef2f2; }
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body class="text-stone-900 antialiased">
@@ -313,10 +314,22 @@ foreach ($_SESSION['listProducts'] as $p) {
         </main>
     </div>
 </div>
-<?php include '../user/rodape.php' ?>
-<script>
-    lucide.createIcons();
-</script>
+
+    <script>
+        // Inicializa os ícones
+        lucide.createIcons();
+
+        // Faz o erro sumir após 5 segundos
+        const erroBox = document.querySelector('.animate-shake');
+        if (erroBox) {
+            setTimeout(() => {
+                erroBox.style.transition = "opacity 0.8s ease, transform 0.8s ease";
+                erroBox.style.opacity = "0";
+                erroBox.style.transform = "translateY(-10px)";
+                setTimeout(() => erroBox.remove(), 800);
+            }, 5000);
+        }
+    </script>
 
 </body>
 </html>

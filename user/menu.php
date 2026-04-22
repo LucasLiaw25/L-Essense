@@ -5,7 +5,7 @@
     <div class="flex-1">
         <span class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 block mb-0.5">Acesso Autorizado</span>
         <span class="font-serif text-2xl text-stone-900 leading-none" style="font-family: 'Instrument Serif', serif;">
-            <strong><?php echo htmlspecialchars($_SESSION['usuario']); ?></strong> 
+            <strong><?php echo htmlspecialchars($_SESSION['usuario']); ?></strong>
             <span class="text-stone-300 text-sm italic ml-1 font-sans">
                 / <?php echo $_SESSION['perfil'] === 'admin' ? 'Gestor' : 'Cliente'; ?>
             </span>

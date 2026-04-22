@@ -189,7 +189,7 @@ foreach ($_SESSION['listProducts'] as $p) {
 
                     <div class="group">
                         <label class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2 block px-1">Nome do Produto</label>
-                        <input type="text" name="product_name" placeholder="Ex: Relógio de Couro" class="w-full bg-stone-50 border-stone-200 rounded-2xl p-4 text-sm focus:ring-4 focus:ring-stone-100 outline-none transition-all border group-hover:border-stone-300">
+                        <input type="text" name="product_name" required placeholder="Ex: Relógio de Couro" class="w-full bg-stone-50 border-stone-200 rounded-2xl p-4 text-sm focus:ring-4 focus:ring-stone-100 outline-none transition-all border group-hover:border-stone-300">
                     </div>
 
                     <div class="group">
@@ -202,12 +202,12 @@ foreach ($_SESSION['listProducts'] as $p) {
                             <label class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2 block px-1">Preço</label>
                             <div class="relative">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-xs font-bold">R$</span>
-                                <input type="text" name="product_price"  placeholder="0,00" class="w-full bg-stone-50 border-stone-200 rounded-2xl py-4 pl-10 pr-4 text-sm focus:ring-4 focus:ring-stone-100 outline-none transition-all border">
+                                <input type="text" name="product_price" required placeholder="0,00" class="w-full bg-stone-50 border-stone-200 rounded-2xl py-4 pl-10 pr-4 text-sm focus:ring-4 focus:ring-stone-100 outline-none transition-all border">
                             </div>
                         </div>
                         <div class="group">
                             <label class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2 block px-1">Unidades</label>
-                            <input type="number" name="product_storage"  placeholder="0" class="w-full bg-stone-50 border-stone-200 rounded-2xl p-4 text-sm focus:ring-4 focus:ring-stone-100 outline-none transition-all border">
+                            <input type="number" name="product_storage" required placeholder="0" class="w-full bg-stone-50 border-stone-200 rounded-2xl p-4 text-sm focus:ring-4 focus:ring-stone-100 outline-none transition-all border">
                         </div>
                     </div>
 

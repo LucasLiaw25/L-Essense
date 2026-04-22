@@ -4,6 +4,6 @@ if (session_status() === PHP_SESSION_NONE) { //verificar se a sessão ja foi ini
 }
 
 if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header("Location: index.php");
+    header("Location: user/login.php");
     exit();
 }

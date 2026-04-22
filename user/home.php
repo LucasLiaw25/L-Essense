@@ -88,14 +88,18 @@ require __DIR__ . '/../auth/VerificarLogin.php';
                 </a>
                 <?php endif; ?>
 
-                <div class="p-8 border border-stone-100 rounded-[2rem] bg-white hover:shadow-xl hover:shadow-stone-100 transition-all border-dashed">
-                    <div class="w-12 h-12 bg-stone-50 rounded-2xl flex items-center justify-center mb-6 text-stone-400">
-                        <i data-lucide="help-circle" class="w-6 h-6"></i>
+                <?php if (isset($_SESSION['perfil']) && $_SESSION['perfil'] === 'admin'): ?>
+                <a href="../dashboard/client.php" class="p-8 border border-stone-900 bg-stone-900 text-white rounded-[2rem] hover:bg-black hover:scale-[1.02] transition-all shadow-2xl shadow-stone-200 block">
+                    <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6">
+                        <i data-lucide="user" class="w-6 h-6 text-white"></i>
                     </div>
-                    <h3 class="font-black uppercase tracking-widest text-xs text-stone-400 mb-2">Suporte</h3>
-                    <p class="text-stone-500 text-sm leading-relaxed italic font-serif text-lg">Precisa de ajuda com o sistema? Entre em contato com a equipe técnica.</p>
-                </div>
-
+                    <h3 class="font-black uppercase tracking-widest text-[10px] text-stone-400 mb-2">Administração</h3>
+                    <p class="font-serif text-2xl mb-4 italic">Gerenciar Clientes</p>
+                    <div class="flex items-center gap-2 text-xs font-bold opacity-70">
+                        Acessar Pagina<i data-lucide="arrow-right" class="w-3 h-3"></i>
+                    </div>
+                </a>
+                <?php endif; ?>
             </div>
         </main>
     </div>

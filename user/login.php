@@ -27,7 +27,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 $_SESSION['logado'] = true;
                 $_SESSION['usuario'] = $nome_digitado;
                 $_SESSION['perfil'] = 'admin'; // Identifica como administrador
-                header("Location: dashboard.php");
+                header("Location: home.php");
                 exit();
             } else {
                 $erro = "Senha incorreta para o perfil de administrador.";

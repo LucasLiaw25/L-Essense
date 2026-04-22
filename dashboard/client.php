@@ -18,10 +18,22 @@ if (!isset($_SESSION['listClients'])) {
 $message = "";
 
 function addClient(Client $client) {
+    if (!isset($_SESSION['listClients'])) {
+        $_SESSION['listClients'] = [];
+    }
+
+    foreach ($_SESSION['listClients'] as $findClient) {
+        if ($findClient->email === $client->email) {
+            return "Erro: Cliente com mesmo e-mail já cadastrado!";
+        }
+    }
+
     $lastClient = end($_SESSION['listClients']);
     $client->id = ($lastClient === false) ? 1 : $lastClient->id + 1;
+    
     $_SESSION['listClients'][] = $client;
-    return $client;
+    
+    return true;
 }
 
 function updateClient(Client $clientRequest, int $id) {

@@ -72,7 +72,7 @@ require __DIR__ . '/../auth/VerificarLogin.php';
             </div>
         </main>
     </div>
-
+    <?php include 'rodape.php' ?>
     <script>
         lucide.createIcons();
     </script>

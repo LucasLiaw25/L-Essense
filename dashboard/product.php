@@ -313,7 +313,7 @@ foreach ($_SESSION['listProducts'] as $p) {
         </main>
     </div>
 </div>
-
+<?php include '../user/rodape.php' ?>
 <script>
     lucide.createIcons();
 </script>

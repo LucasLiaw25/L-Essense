@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
-session_start();
-
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 class Client {
     public int $id;
     public function __construct(
@@ -116,7 +117,9 @@ $totalClients = count($_SESSION['listClients']);
     </style>
 </head>
 <body class="text-stone-900 antialiased">
-
+<div class="max-w-6xl mx-auto px-6">
+    <?php require '../user/menu.php'; ?>
+</div>
 <div class="max-w-6xl mx-auto px-4 py-12">
     
     <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
@@ -321,6 +324,6 @@ $totalClients = count($_SESSION['listClients']);
         }
     });
 </script>
-
+<?php include '../user/rodape.php' ?>
 </body>
 </html>

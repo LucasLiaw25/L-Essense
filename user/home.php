@@ -57,7 +57,7 @@ require __DIR__ . '/../auth/VerificarLogin.php';
     <div class="relative z-10 max-w-xl">
         <h1 class="font-serif text-6xl mb-4 italic text-white leading-tight">Bem-vindo de volta,</h1>
         <p class="text-stone-300 text-lg leading-relaxed font-light">
-            Gerencie os pedidos, estoque e configurações do seu restaurante com elegância e precisão.
+           Veja a varieade de refeições bem aqui!.
         </p>
     </div>
 </header>

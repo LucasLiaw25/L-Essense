@@ -323,6 +323,6 @@ $totalClients = count($_SESSION['listClients']);
         }
     });
 </script>
-
+<?php include '../user/rodape.php' ?>
 </body>
 </html>

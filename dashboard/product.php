@@ -42,16 +42,19 @@ function updateProduct(Product $productRequest, int $id) {
 
 function deleteProduct(int $id){
     $found = false;
-    foreach($_SESSION['listProducts'] as $product){
+    foreach($_SESSION['listProducts'] as $index => $product){
         if($product->id == $id){
             $found = true;
-            $_SESSION['listProducts'].deleteProduct($product);
+            unset($_SESSION['listProducts'][$index]);
+            // Reindexa o array para evitar problemas com índices ausentes
+            $_SESSION['listProducts'] = array_values($_SESSION['listProducts']);
+            break;
         }
     }
     if($found){
-        return "Produto deletado com sucesso";
+        return "<div class='bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl mb-6 flex items-center gap-2'><i data-lucide='trash-2' class='w-4 h-4'></i> Produto removido com sucesso</div>";
     }else{
-        return "Produto não encontrado";
+        return "<div class='bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl mb-6'>Produto não encontrado</div>";
     }
 }
 
@@ -87,10 +90,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     elseif($action === "delete"){
-        $id = (int) $_POST("")
+        $id = (int) $_POST['product_id'];
+        $message = deleteProduct($id);
     }
 }
 
+// Métricas baseadas no seu TSX
 $totalCount = count($_SESSION['listProducts']);
 $ativosCount = 0;
 $baixoEstoqueCount = 0;
@@ -115,9 +120,7 @@ foreach ($_SESSION['listProducts'] as $p) {
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #fafaf9; }
         .font-serif { font-family: 'Instrument Serif', serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e7e5e4; border-radius: 10px; }
+        .btn-delete:hover { color: #ef4444; background-color: #fef2f2; }
     </style>
 </head>
 <body class="text-stone-900 antialiased">
@@ -126,91 +129,92 @@ foreach ($_SESSION['listProducts'] as $p) {
     
     <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
         <div>
-            <h1 class="text-5xl font-serif font-bold tracking-tight">Gestão de Produtos</h1>
-            <p class="text-stone-500 mt-2">Administre seu catálogo com elegância e precisão.</p>
+            <h1 class="text-5xl font-serif font-bold tracking-tight text-stone-900">Gestão de Produtos</h1>
+            <p class="text-stone-500 mt-2 font-medium">Controle de estoque com precisão e elegância.</p>
         </div>
-        <div class="flex items-center gap-2 text-stone-400">
+        <div class="flex items-center gap-2 text-stone-400 bg-white border border-stone-100 px-4 py-2 rounded-2xl shadow-sm">
             <i data-lucide="calendar" class="w-4 h-4"></i>
-            <span class="text-sm font-medium"><?= date('d/m/Y') ?></span>
+            <span class="text-xs font-bold uppercase tracking-widest"><?= date('d/m/Y') ?></span>
         </div>
     </header>
 
     <?= $message ?>
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="bg-stone-50 border border-stone-100 p-5 rounded-2xl">
-            <div class="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center mb-3">
-                <i data-lucide="package" class="w-5 h-5 text-stone-600"></i>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+        <div class="bg-white border border-stone-200 p-6 rounded-[2rem] shadow-sm">
+            <div class="w-12 h-12 bg-stone-50 rounded-2xl flex items-center justify-center mb-4 border border-stone-100">
+                <i data-lucide="package" class="w-6 h-6 text-stone-600"></i>
             </div>
-            <p class="text-3xl font-black text-stone-800"><?= $totalCount ?></p>
-            <p class="text-xs font-bold uppercase tracking-wider text-stone-500 mt-1">Total</p>
+            <p class="text-4xl font-black text-stone-900"><?= $totalCount ?></p>
+            <p class="text-[10px] font-black uppercase tracking-[0.15em] text-stone-400 mt-1">Total de Itens</p>
         </div>
-        <div class="bg-emerald-50 border border-emerald-100 p-5 rounded-2xl">
-            <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mb-3">
-                <i data-lucide="check-circle" class="w-5 h-5 text-emerald-600"></i>
+        <div class="bg-white border border-stone-200 p-6 rounded-[2rem] shadow-sm">
+            <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 border border-emerald-100">
+                <i data-lucide="check-circle" class="w-6 h-6 text-emerald-600"></i>
             </div>
-            <p class="text-3xl font-black text-emerald-800"><?= $ativosCount ?></p>
-            <p class="text-xs font-bold uppercase tracking-wider text-emerald-600 mt-1">Ativos</p>
+            <p class="text-4xl font-black text-emerald-900"><?= $ativosCount ?></p>
+            <p class="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-500 mt-1">Em Linha</p>
         </div>
-        <div class="bg-amber-50 border border-amber-100 p-5 rounded-2xl">
-            <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center mb-3">
-                <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600"></i>
+        <div class="bg-white border border-stone-200 p-6 rounded-[2rem] shadow-sm">
+            <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mb-4 border border-amber-100">
+                <i data-lucide="trending-up" class="w-6 h-6 text-amber-600"></i>
             </div>
-            <p class="text-3xl font-black text-amber-800"><?= $baixoEstoqueCount ?></p>
-            <p class="text-xs font-bold uppercase tracking-wider text-amber-600 mt-1">Est. Baixo</p>
+            <p class="text-4xl font-black text-amber-900"><?= $baixoEstoqueCount ?></p>
+            <p class="text-[10px] font-black uppercase tracking-[0.15em] text-amber-500 mt-1">Reposição</p>
         </div>
-        <div class="bg-red-50 border border-red-100 p-5 rounded-2xl">
-            <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center mb-3">
-                <i data-lucide="x-circle" class="w-5 h-5 text-red-600"></i>
+        <div class="bg-white border border-stone-200 p-6 rounded-[2rem] shadow-sm">
+            <div class="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mb-4 border border-red-100">
+                <i data-lucide="archive" class="w-6 h-6 text-red-600"></i>
             </div>
-            <p class="text-3xl font-black text-red-800"><?= $esgotadosCount ?></p>
-            <p class="text-xs font-bold uppercase tracking-wider text-red-600 mt-1">Esgotados</p>
+            <p class="text-4xl font-black text-red-900"><?= $esgotadosCount ?></p>
+            <p class="text-[10px] font-black uppercase tracking-[0.15em] text-red-500 mt-1">Esgotados</p>
         </div>
     </div>
 
-    <div class="grid lg:grid-cols-[380px_1fr] gap-8">
+    <div class="grid lg:grid-cols-[380px_1fr] gap-10 items-start">
         
-        <aside>
-            <div class="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm sticky top-8">
-                <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-                    <i data-lucide="plus-circle" class="w-5 h-5"></i> Registrar Produto
-                </h2>
+        <aside class="sticky top-8">
+            <div class="bg-white border border-stone-200 rounded-[2.5rem] p-8 shadow-sm">
+                <h2 class="text-2xl font-serif font-bold mb-8 text-stone-800">Novo Registro</h2>
                 
-                <form method="POST" class="space-y-5">
-                    <input type="hidden" name="action" value="create">
+                <form method="POST" class="space-y-6">
+                    <input type="hidden" name="action" id="formAction" value="create">
                     
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-stone-400 px-1">ID (Para Atualizar)</label>
-                        <input type="number" name="product_id" placeholder="Ex: 1" class="w-full bg-stone-50 border-stone-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-stone-200 outline-none transition-all">
+                    <div class="group">
+                        <label class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2 block px-1">ID para Atualização</label>
+                        <input type="number" name="product_id" placeholder="Opcional" class="w-full bg-stone-50 border-stone-200 rounded-2xl p-4 text-sm focus:ring-4 focus:ring-stone-100 outline-none transition-all border group-hover:border-stone-300">
                     </div>
 
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-stone-400 px-1">Nome do Produto</label>
-                        <input type="text" name="product_name" placeholder="Ex: Café Bourbon Amarelo" class="w-full bg-stone-50 border-stone-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-stone-200 outline-none transition-all">
+                    <div class="group">
+                        <label class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2 block px-1">Nome do Produto</label>
+                        <input type="text" name="product_name" placeholder="Ex: Relógio de Couro" class="w-full bg-stone-50 border-stone-200 rounded-2xl p-4 text-sm focus:ring-4 focus:ring-stone-100 outline-none transition-all border group-hover:border-stone-300">
                     </div>
 
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-stone-400 px-1">Descrição</label>
-                        <textarea name="product_description" rows="3" placeholder="Notas de chocolate e caramelo..." class="w-full bg-stone-50 border-stone-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-stone-200 outline-none transition-all resize-none"></textarea>
+                    <div class="group">
+                        <label class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2 block px-1">Descrição Detalhada</label>
+                        <textarea name="product_description" rows="3" placeholder="Descreva as características..." class="w-full bg-stone-50 border-stone-200 rounded-2xl p-4 text-sm focus:ring-4 focus:ring-stone-100 outline-none transition-all border resize-none group-hover:border-stone-300"></textarea>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-black uppercase tracking-widest text-stone-400 px-1">Preço (R$)</label>
-                            <input type="text" name="product_price" placeholder="34,90" class="w-full bg-stone-50 border-stone-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-stone-200 outline-none transition-all">
+                        <div class="group">
+                            <label class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2 block px-1">Preço</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-xs font-bold">R$</span>
+                                <input type="text" name="product_price"  placeholder="0,00" class="w-full bg-stone-50 border-stone-200 rounded-2xl py-4 pl-10 pr-4 text-sm focus:ring-4 focus:ring-stone-100 outline-none transition-all border">
+                            </div>
                         </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-black uppercase tracking-widest text-stone-400 px-1">Estoque</label>
-                            <input type="number" name="product_storage" placeholder="100" class="w-full bg-stone-50 border-stone-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-stone-200 outline-none transition-all">
+                        <div class="group">
+                            <label class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2 block px-1">Unidades</label>
+                            <input type="number" name="product_storage"  placeholder="0" class="w-full bg-stone-50 border-stone-200 rounded-2xl p-4 text-sm focus:ring-4 focus:ring-stone-100 outline-none transition-all border">
                         </div>
                     </div>
 
-                    <div class="pt-4 space-y-3">
-                        <button type="submit" name="action" value="create" class="w-full bg-stone-800 hover:bg-stone-900 text-stone-50 font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2">
-                            <i data-lucide="save" class="w-4 h-4"></i> Cadastrar Produto
+                    <div class="pt-6 space-y-3">
+                        <button type="submit" onclick="document.getElementById('formAction').value='create'" class="w-full bg-stone-900 hover:bg-black text-stone-50 font-bold py-5 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-lg shadow-stone-200">
+                            <i data-lucide="plus" class="w-5 h-5"></i> Cadastrar
                         </button>
-                        <button type="submit" name="action" value="update" class="w-full bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 font-bold py-3.5 rounded-xl transition-all">
-                            Atualizar por ID
+                        <button type="submit" onclick="document.getElementById('formAction').value='update'" class="w-full bg-white border border-stone-200 hover:bg-stone-50 text-stone-600 font-bold py-4 rounded-2xl transition-all">
+                            Atualizar Existente
                         </button>
                     </div>
                 </form>
@@ -218,82 +222,69 @@ foreach ($_SESSION['listProducts'] as $p) {
         </aside>
 
         <main class="space-y-6">
-            
-            <div class="relative">
-                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400"></i>
-                <input type="text" placeholder="Buscar por nome ou descrição..." class="w-full pl-11 pr-4 py-4 bg-white border border-stone-200 rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-stone-200">
-            </div>
-
-            <div class="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm space-y-4">
-                <div class="flex flex-wrap gap-2">
-                    <button class="bg-stone-800 text-stone-50 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
-                        <i data-lucide="layers" class="w-3 h-3"></i> Todo Estoque
-                    </button>
-                    <button class="bg-white border border-stone-200 text-stone-500 px-4 py-2 rounded-xl text-xs font-bold hover:bg-stone-50">Disponível</button>
-                    <button class="bg-white border border-stone-200 text-stone-500 px-4 py-2 rounded-xl text-xs font-bold hover:bg-stone-50">Estoque Baixo</button>
-                    <button class="bg-white border border-stone-200 text-stone-500 px-4 py-2 rounded-xl text-xs font-bold hover:bg-stone-50">Esgotado</button>
+            <div class="bg-white border border-stone-200 rounded-[2.5rem] shadow-sm overflow-hidden">
+                <div class="p-8 border-b border-stone-100 flex justify-between items-center">
+                    <h2 class="text-2xl font-serif font-bold text-stone-800">Catálogo Atual</h2>
+                    <span class="text-[10px] font-black text-stone-400 uppercase tracking-widest bg-stone-50 px-3 py-1 rounded-full border border-stone-100"><?= $totalCount ?> Itens</span>
                 </div>
-            </div>
 
-            <div class="bg-white border border-stone-200 rounded-3xl shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-stone-50/50 border-b border-stone-100 text-[10px] font-black uppercase tracking-widest text-stone-400">
-                                <th class="px-6 py-5">Produto</th>
-                                <th class="px-6 py-5">Preço</th>
-                                <th class="px-6 py-5">Estoque</th>
-                                <th class="px-6 py-5">Status</th>
-                                <th class="px-6 py-5 text-right text-stone-400"><i data-lucide="more-horizontal" class="w-4 h-4 ml-auto"></i></th>
+                            <tr class="bg-stone-50/50 text-[10px] font-black uppercase tracking-[0.2em] text-stone-400">
+                                <th class="px-8 py-5">Item & Ref</th>
+                                <th class="px-8 py-5">Valor</th>
+                                <th class="px-8 py-5 text-center">Estoque</th>
+                                <th class="px-8 py-5">Status</th>
+                                <th class="px-8 py-5 text-right">Ações</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-stone-50">
+                        <tbody class="divide-y divide-stone-100">
                             <?php foreach ($_SESSION['listProducts'] as $p): ?>
-                            <tr class="group hover:bg-stone-50/40 transition-colors">
-                                <td class="px-6 py-5">
+                            <tr class="group hover:bg-stone-50/30 transition-colors">
+                                <td class="px-8 py-6">
                                     <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center text-stone-400">
-                                            <i data-lucide="image" class="w-6 h-6"></i>
+                                        <div class="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center text-stone-400 group-hover:bg-white transition-colors border border-transparent group-hover:border-stone-100">
+                                            <i data-lucide="tag" class="w-5 h-5"></i>
                                         </div>
                                         <div>
-                                            <p class="font-bold text-stone-800">#<?= $p->id ?> - <?= htmlspecialchars($p->name) ?></p>
-                                            <p class="text-xs text-stone-400 line-clamp-1 max-w-[200px]"><?= htmlspecialchars($p->description) ?></p>
+                                            <p class="font-bold text-stone-900">#<?= $p->id ?> - <?= htmlspecialchars($p->name) ?></p>
+                                            <p class="text-xs text-stone-400 italic line-clamp-1 max-w-[180px]"><?= htmlspecialchars($p->description) ?></p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 font-bold text-stone-700">
+                                <td class="px-8 py-6 font-bold text-stone-700">
                                     R$ <?= number_format($p->price, 2, ',', '.') ?>
                                 </td>
-                                <td class="px-6 py-5">
+                                <td class="px-8 py-6 text-center">
                                     <?php if($p->storage == 0): ?>
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-600 text-[10px] font-black uppercase border border-red-100">
-                                            Esgotado
-                                        </span>
+                                        <span class="inline-flex px-3 py-1 rounded-lg bg-red-50 text-red-600 text-[10px] font-black uppercase border border-red-100">Esgotado</span>
                                     <?php elseif($p->storage <= 10): ?>
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-black uppercase border border-amber-100">
-                                            <?= $p->storage ?> un.
-                                        </span>
+                                        <span class="inline-flex px-3 py-1 rounded-lg bg-amber-50 text-amber-600 text-[10px] font-black uppercase border border-amber-100"><?= $p->storage ?> un.</span>
                                     <?php else: ?>
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-50 text-teal-600 text-[10px] font-black uppercase border border-teal-100">
-                                            <?= $p->storage ?> un.
-                                        </span>
+                                        <span class="inline-flex px-3 py-1 rounded-lg bg-stone-100 text-stone-600 text-[10px] font-black uppercase"><?= $p->storage ?> un.</span>
                                     <?php endif; ?>
                                 </td>
-                                <td class="px-6 py-5 text-sm">
+                                <td class="px-8 py-6">
                                     <?php if($p->storage > 0): ?>
-                                        <span class="flex items-center gap-1.5 text-emerald-600 font-bold text-xs">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Ativo
-                                        </span>
+                                        <div class="flex items-center gap-2 text-emerald-600 font-bold text-[10px] uppercase tracking-wider">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Disponível
+                                        </div>
                                     <?php else: ?>
-                                        <span class="flex items-center gap-1.5 text-stone-400 font-bold text-xs">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-stone-300"></span> Inativo
-                                        </span>
+                                        <div class="flex items-center gap-2 text-stone-300 font-bold text-[10px] uppercase tracking-wider">
+                                            <span class="w-2 h-2 rounded-full bg-stone-200"></span> Inativo
+                                        </div>
                                     <?php endif; ?>
                                 </td>
-                                <td class="px-6 py-5 text-right">
-                                    <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button title="Editar" class="p-2 hover:bg-stone-200 rounded-lg text-stone-400 transition-colors"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                                        <button title="Excluir" class="p-2 hover:bg-red-50 hover:text-red-500 rounded-lg text-stone-400 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                <td class="px-8 py-6 text-right">
+                                    <div class="flex justify-end items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <form method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este produto?');">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="product_id" value="<?= $p->id ?>">
+                                            <button type="submit" class="p-3 text-stone-400 btn-delete rounded-xl transition-all">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -301,10 +292,12 @@ foreach ($_SESSION['listProducts'] as $p) {
 
                             <?php if (empty($_SESSION['listProducts'])): ?>
                             <tr>
-                                <td colspan="5" class="px-6 py-20 text-center">
-                                    <div class="flex flex-col items-center gap-3 text-stone-300">
-                                        <i data-lucide="package-open" class="w-12 h-12"></i>
-                                        <p class="text-stone-400 font-medium">Nenhum produto no catálogo.</p>
+                                <td colspan="5" class="px-8 py-24 text-center">
+                                    <div class="flex flex-col items-center gap-4 text-stone-300">
+                                        <div class="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center">
+                                            <i data-lucide="box" class="w-8 h-8"></i>
+                                        </div>
+                                        <p class="font-serif text-xl italic text-stone-400">O catálogo está vazio no momento.</p>
                                     </div>
                                 </td>
                             </tr>

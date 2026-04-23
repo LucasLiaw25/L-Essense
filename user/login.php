@@ -2,6 +2,7 @@
 ob_start();
 session_start();
 include __DIR__ . '/../auth/usuario_permitidos.php';
+require_once __DIR__ . '/../auth/ClientClass.php'; //usa a função do client
 
 // Se já estiver logado, vai direto para a home
 if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {

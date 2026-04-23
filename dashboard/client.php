@@ -1,43 +1,6 @@
 <?php
 declare(strict_types=1);
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-class Client {
-    public int $id;
-    public function __construct(
-        public string $name,
-        public string $email,
-        public string $password
-    ) {}
-}
-
-if (!isset($_SESSION['listClients'])) {
-    $_SESSION['listClients'] = [];
-}
-
-$message = "";
-
-function addClient(Client $client) {
-    if (!isset($_SESSION['listClients'])) {
-        $_SESSION['listClients'] = [];
-    }
-
-    foreach ($_SESSION['listClients'] as $findClient) {
-        if ($findClient->email === $client->email) {
-            return "Erro: Cliente com mesmo e-mail já cadastrado!";
-        }
-    }
-
-    $lastClient = end($_SESSION['listClients']);
-    $client->id = ($lastClient === false) ? 1 : $lastClient->id + 1;
-    
-    $_SESSION['listClients'][] = $client;
-    
-    return true;
-}
+require_once __DIR__ . '../auth/ClientClass.php';
 
 function updateClient(Client $clientRequest, int $id) {
     $found = false;

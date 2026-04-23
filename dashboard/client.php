@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../auth/ClientClass.php';
-
+date_default_timezone_set('America/Sao_Paulo');
 $message = "";
 function updateClient(Client $clientRequest, int $id) {
     $found = false;

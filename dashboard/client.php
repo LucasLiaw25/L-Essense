@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../auth/ClientClass.php';
 
+$message = "";
 function updateClient(Client $clientRequest, int $id) {
     $found = false;
     foreach ($_SESSION['listClients'] as $client) {

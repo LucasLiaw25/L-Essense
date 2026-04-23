@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '../auth/ClientClass.php';
+require_once __DIR__ . '/../auth/ClientClass.php';
 
 function updateClient(Client $clientRequest, int $id) {
     $found = false;

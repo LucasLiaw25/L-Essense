@@ -73,15 +73,20 @@ $totalClients = count($_SESSION['listClients']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L'Essence | Gestão de Clientes</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #fafaf9; }
-        .font-serif { font-family: 'Instrument Serif', serif; }
-        .btn-delete:hover { color: #ef4444; background-color: #fef2f2; }
-        input[type="number"]::-webkit-inner-spin-button, 
-        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        /* Define as fontes padrão para as classes do Tailwind */
+        body { font-family: 'Inter', sans-serif; }
+        .font-serif { font-family: 'Instrument Serif', serif !important; }
+        
+        /* Ajuste fino para suavizar as fontes no navegador */
+        * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
     </style>
+</head>
 </head>
 <body class="text-stone-900 antialiased">
     <div class="max-w-6xl mx-auto px-6">

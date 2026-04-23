@@ -1,6 +1,6 @@
 <footer class="mt-24 pb-12 border-t border-stone-100">
     <div class="max-w-6xl mx-auto pt-12 flex flex-col md:flex-row justify-between items-center gap-6">
-        
+
         <div class="flex flex-col items-center md:items-start">
             <span class="font-serif text-2xl italic text-stone-800 mb-2">L-Essense</span>
             <div class="flex items-center gap-2">

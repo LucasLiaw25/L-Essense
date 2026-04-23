@@ -28,6 +28,7 @@
                 <i data-lucide="package" class="w-4 h-4"></i> Clientes
             </a>
         <?php endif; ?>
+
         <a href="../auth/logout.php" class="flex items-center gap-2 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-red-400 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all">
             <i data-lucide="log-out" class="w-4 h-4"></i> Sair
         </a>
@@ -36,5 +37,7 @@
 
 <script>
     // Força a criação dos ícones assim que o menu carrega
-    if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 </script>

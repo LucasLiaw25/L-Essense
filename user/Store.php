@@ -1,6 +1,5 @@
 <?php
 
-
 ?>
 
 <!DOCTYPE html>
@@ -33,6 +32,8 @@
     </style>
 </head>
 <body class="bg-white text-stone-900 antialiased">
-
+    <div class="max-w-6xl mx-auto px-6">
+        <?php require 'menu.php'; ?>
+    </div>
 </body>
 </html>

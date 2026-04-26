@@ -1,5 +1,29 @@
 <?php
+//Defini a classe primeiro para o PHP saber como ler os objetos da sessão
+if (!class_exists('Product')) {
+    class Product {
+        public int $id;
+        public function __construct(
+            public string $name,
+            public string $description,
+            public float $price,
+            public int $storage
+        ) {}
+    }
+}
 require __DIR__ . '/../auth/VerificarLogin.php';
+// Garante que a variável existe para não dar erro de "undefined"
+if (!isset($_SESSION['carrinho'])) {
+    $_SESSION['carrinho'] = [];
+}
+// LOGICA PARA LIMPAR O CARRINHO
+if (isset($_GET['limpar_carrinho'])) {
+    $_SESSION['carrinho'] = []; // Esvazia o array
+    header("Location: home.php"); // Recarrega a página para sumir o menu e limpar a URL
+    exit();
+}
+
+$produtos = $_SESSION['listProducts']??[];
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -62,6 +86,11 @@ require __DIR__ . '/../auth/VerificarLogin.php';
 <body class="bg-white text-stone-900 antialiased">
     <div class="max-w-6xl mx-auto px-6">
         <?php require 'menu.php'; ?>
+        <?php if (isset($_GET['erro']) && $_GET['erro'] === 'sem_estoque'): ?>
+    <div class="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-red-600 text-white px-6 py-3 rounded-2xl shadow-2xl font-bold text-xs uppercase tracking-widest animate-bounce">
+        Limite de estoque atingido para este item!
+    </div>
+<?php endif; ?>
 
         <?php if (isset($_GET['erro']) && $_GET['erro'] === 'sem_permissao'): ?>
             <div class="mb-8 flex items-center gap-3 p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl animate-pulse">
@@ -127,7 +156,101 @@ require __DIR__ . '/../auth/VerificarLogin.php';
             </div>
         </main>
     </div>
+    <main class="py-12">
+        <div class="mb-10 px-6">
+            <h2 class="font-serif text-4xl italic text-stone-800">Nosso Cardápio</h2>
+            <p class="text-stone-400 text-sm traking-widest uppercase font-bold mt-2">Escolha sua experiência </p>
+        </div>
 
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-6">
+        <?php if (empty($produtos)): ?>
+            <div class="col-span-full py-20 text-center border-2 border-dashed border-stone-100 rounded-[3rem]">
+                <i data-lucide="utensils-crosses" class="w-10 h-10 text-stone-200 mx-auto mb-4"></i>
+                <p class="font-serif text-xl italic text-stone-400">O cardápio está sendo preparado...</p>
+            </div>
+        <?php else: ?>
+            <?php foreach ($produtos as $produto): ?>
+    <?php 
+        // Verifica se o estoque é zero ou menor
+        $estaVazio = ($produto->storage <= 0); 
+    ?>
+    
+    <div class="bg-white border border-stone-200 rounded-[2.5rem] p-8 shadow-sm hover:shadow-xl transition-all group <?php echo $estaVazio ? 'opacity-60' : ''; ?>">
+        
+        <?php if ($estaVazio): ?>
+            <div class="mb-4 inline-flex items-center gap-2 px-3 py-1 bg-red-50 border border-red-100 rounded-full">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                <span class="text-[9px] font-black uppercase tracking-widest text-red-600">Esgotado</span>
+            </div>
+        <?php endif; ?>
+
+        <div class="flex justify-between items-start mb-6">
+            <div>
+                <h3 class="font-serif text-3xl italic mb-1"><?php echo htmlspecialchars($produto->name); ?></h3>
+                <p class="text-stone-400 text-xs uppercase tracking-widest font-bold">
+                    Estoque: <?php echo $produto->storage; ?> unid.
+                </p>
+            </div>
+            <p class="font-serif text-xl text-stone-900">R$ <?php echo number_format($produto->price, 2, ',', '.'); ?></p>
+        </div>
+
+        <p class="text-stone-500 text-sm leading-relaxed mb-8 line-clamp-2">
+            <?php echo htmlspecialchars($produto->description); ?>
+        </p>
+
+        <div class="flex justify-between items-center">
+            <?php if ($estaVazio): ?>
+                <button disabled class="p-4 bg-stone-100 text-stone-300 rounded-2xl cursor-not-allowed border border-stone-200">
+                    <i data-lucide="slash" class="w-5 h-5"></i>
+                </button>
+            <?php else: ?>
+                <a href="carrinho_logica.php?adicionar=<?php echo $produto->id; ?>" 
+                   class="p-4 bg-stone-900 text-white rounded-2xl hover:scale-110 active:scale-95 transition-all shadow-lg shadow-stone-200">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
+<?php endforeach; ?>
+        <?php endif; ?>
+        <?php if (!empty($_SESSION['carrinho'])): ?>
+<div class="fixed bottom-8 right-8 w-80 bg-white border border-stone-200 shadow-2xl rounded-[2rem] p-6 z-[60]">
+    <h3 class="font-serif text-xl mb-4 italic text-stone-800 flex items-center gap-2">
+        <i data-lucide="shopping-bag" class="w-5 h-5"></i> Seu Carrinho
+    </h3>
+    
+    <div class="max-h-60 overflow-y-auto mb-4">
+        <?php 
+        $totalGeral = 0;
+        foreach ($_SESSION['carrinho'] as $item): 
+            $subtotal = $item['preco'] * $item['quantidade'];
+            $totalGeral += $subtotal;
+        ?>
+            <div class="flex justify-between text-sm mb-2 pb-2 border-b border-stone-50">
+                <span><?php echo $item['quantidade']; ?>x <?php echo $item['nome']; ?></span>
+                <span class="font-bold text-stone-600">R$ <?php echo number_format($subtotal, 2, ',', '.'); ?></span>
+            </div>
+        <?php endforeach; ?>
+    </div>
+
+    <div class="flex justify-between items-center mb-6">
+        <span class="text-[10px] font-black uppercase tracking-widest text-stone-400">Total</span>
+        <span class="text-xl font-serif">R$ <?php echo number_format($totalGeral, 2, ',', '.'); ?></span>
+    </div>
+
+    <form action="carrinho_logica.php" method="POST">
+        <input type="hidden" name="total_pedido" value="<?php echo $totalGeral; ?>">
+        <button name="finalizar_pedido" type="submit" class="w-full py-4 bg-green-600 text-white font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-green-700 transition-all">
+            Lançar Pedido Agora
+        </button>
+    </form>
+    
+    <a href="?limpar_carrinho=1" class="block text-center mt-3 text-[9px] text-stone-400 uppercase tracking-tighter">Limpar Carrinho</a>
+</div>
+<?php endif; ?>
+    </div>
+    </main>
+    
     <?php include 'rodape.php' ?>
 
     <script>

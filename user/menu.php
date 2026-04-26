@@ -29,6 +29,12 @@
             </a>
         <?php endif; ?>
 
+                <?php if (isset($_SESSION['perfil']) && $_SESSION['perfil'] === 'admin'): ?>
+            <a href="../dashboard/status.php" class="flex items-center gap-2 px-5 py-2.5 text-xs font-black uppercase tracking-widest bg-stone-900 text-stone-50 hover:bg-black rounded-2xl transition-all shadow-md">
+                <i data-lucide="package" class="w-4 h-4"></i> Status
+            </a>
+        <?php endif; ?>
+
         <a href="../auth/logout.php" class="flex items-center gap-2 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-red-400 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all">
             <i data-lucide="log-out" class="w-4 h-4"></i> Sair
         </a>

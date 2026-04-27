@@ -72,7 +72,7 @@ $pedidos = $_SESSION['pedido_realizados'] ?? [];
             <div class="bg-white border border-stone-200 rounded-[3rem] p-20 text-center shadow-sm">
                 <i data-lucide="utensils" class="w-12 h-12 text-stone-200 mx-auto mb-6"></i>
                 <p class="font-serif text-2xl italic text-stone-400">Ainda não realizou nenhum pedido.</p>
-                <a href="home.php" class="inline-block mt-8 px-8 py-4 bg-stone-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all">Explorar Menu</a>
+                <a href="../user/home.php" class="inline-block mt-8 px-8 py-4 bg-stone-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all">Explorar Menu</a>
             </div>
         <?php else: ?>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">

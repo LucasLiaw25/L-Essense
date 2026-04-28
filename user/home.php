@@ -119,16 +119,6 @@ $produtos = $_SESSION['listProducts']??[];
             </header>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="p-8 border border-stone-100 rounded-[2rem] bg-stone-50/50 hover:bg-white hover:shadow-xl hover:shadow-stone-100 transition-all group">
-                    <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
-                        <i data-lucide="user" class="w-6 h-6 text-stone-800"></i>
-                    </div>
-                    <h3 class="font-black uppercase tracking-widest text-xs text-stone-400 mb-2">Seu Perfil</h3>
-                    <p class="font-serif text-2xl text-stone-800 mb-4"><?php echo htmlspecialchars($_SESSION['usuario']); ?></p>
-                    <span class="inline-block px-3 py-1 bg-stone-200 text-[10px] font-black uppercase tracking-tighter rounded-full">
-                        Status: <?php echo $_SESSION['perfil']; ?>
-                    </span>
-                </div>
 
                 <?php if (isset($_SESSION['perfil']) && $_SESSION['perfil'] === 'admin'): ?>
                     <a href="../dashboard/product.php" class="p-8 border border-stone-900 bg-stone-900 text-white rounded-[2rem] hover:bg-black hover:scale-[1.02] transition-all shadow-2xl shadow-stone-200 block">
@@ -152,10 +142,20 @@ $produtos = $_SESSION['listProducts']??[];
                             Acessar Pagina<i data-lucide="arrow-right" class="w-3 h-3"></i>
                         </div>
                     </a>
+
+                     <a href="../dashboard/status.php" class="p-8 border border-stone-900 bg-stone-900 text-white rounded-[2rem] hover:bg-black hover:scale-[1.02] transition-all shadow-2xl shadow-stone-200 block">
+                        <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6">
+                            <i data-lucide="user" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <h3 class="font-black uppercase tracking-widest text-[10px] text-stone-400 mb-2">Administração</h3>
+                        <p class="font-serif text-2xl mb-4 italic">Gerenciar Status</p>
+                        <div class="flex items-center gap-2 text-xs font-bold opacity-70">
+                            Acessar Pedidos<i data-lucide="arrow-right" class="w-3 h-3"></i>
+                        </div>
+                    </a>
                 <?php endif; ?>
             </div>
         </main>
-    </div>
     <main class="py-12">
         <div class="mb-10 px-6">
             <h2 class="font-serif text-4xl italic text-stone-800">Nosso Cardápio</h2>
@@ -168,6 +168,7 @@ $produtos = $_SESSION['listProducts']??[];
                 <i data-lucide="utensils-crosses" class="w-10 h-10 text-stone-200 mx-auto mb-4"></i>
                 <p class="font-serif text-xl italic text-stone-400">O cardápio está sendo preparado...</p>
             </div>
+    </div>
         <?php else: ?>
             <?php foreach ($produtos as $produto): ?>
     <?php 

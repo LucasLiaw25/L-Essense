@@ -205,7 +205,7 @@ $produtos = $_SESSION['listProducts']??[];
                 </button>
             <?php else: ?>
                 <a href="carrinho_logica.php?adicionar=<?php echo $produto->id; ?>" 
-                   class="p-4 bg-stone-900 text-white rounded-2xl hover:scale-110 active:scale-95 transition-all shadow-lg shadow-stone-200">
+                    class="p-4 bg-stone-900 text-white rounded-2xl hover:scale-110 active:scale-95 transition-all shadow-lg shadow-stone-200">
                     <i data-lucide="plus" class="w-5 h-5"></i>
                 </a>
             <?php endif; ?>

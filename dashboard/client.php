@@ -1,9 +1,11 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/../auth/ClientClass.php';
 require_once __DIR__ . '/../auth/verificarADM.php';
 require_once __DIR__ . '/../auth/ClientClass.php';
 
 date_default_timezone_set('America/Sao_Paulo');
+
 $message = "";
 function updateClient(Client $clientRequest, int $id) {
     $found = false;
@@ -207,10 +209,10 @@ $totalClients = count($_SESSION['listClients']);
                                     <td class="px-8 py-6">
                                         <div class="flex items-center gap-4">
                                             <div class="w-10 h-10 bg-stone-100 rounded-full flex items-center justify-center text-stone-500 font-bold text-xs">
-                                                <?= strtoupper(substr($c->name, 0, 1)) ?>
+                                                <?= strtoupper(substr($c-> name?? '', 0, 1)) ?>
                                             </div>
                                             <div>
-                                                <p class="font-bold text-stone-900">#<?= $c->id ?> - <?= htmlspecialchars($c->name) ?></p>
+                                                <p class="font-bold text-stone-900">#<?= $c->id ?? '0' ?> - <?= htmlspecialchars($c->name ?? 'Nome Indisponível') ?></p>
                                                 <p class="text-[10px] text-stone-400 uppercase tracking-tighter">Membro Premium</p>
                                             </div>
                                         </div>

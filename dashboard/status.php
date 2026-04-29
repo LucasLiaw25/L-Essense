@@ -10,7 +10,7 @@ if (!class_exists('Product')) {
             public int $storage
         ) {}
     }
-}
+}   
 
 require __DIR__ . '/../auth/VerificarLogin.php';
 

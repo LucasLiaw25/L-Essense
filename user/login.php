@@ -1,8 +1,9 @@
 <?php
 ob_start();
 session_start();
-include __DIR__ . '/../auth/usuario_permitidos.php';
-require_once __DIR__ . '/../auth/ClientClass.php'; //usa a função do client
+
+// 1. Importa a conexão com o banco de dados
+require_once __DIR__ . '/../auth/Conexao.php'; 
 
 // Se já estiver logado, vai direto para a home
 if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
@@ -10,7 +11,6 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
     exit();
 }
 
-// Caminho atualizado para encontrar o arquivo de usuários na pasta auth
 $erro = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -21,31 +21,50 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($nome_digitado) || empty($email_digitado) || empty($senha_digitada)) {
         $erro = "Por favor, preencha todos os campos para continuar!";
     } else {
-        if (isset($usuario_permitidos[$nome_digitado])) {
-            $dados_usuario = $usuario_permitidos[$nome_digitado];
+        
+        // 2. Busca se o e-mail digitado já existe no banco de dados
+        $sql = "SELECT * FROM usuarios WHERE email = ?";
+        $stmt = mysqli_prepare($conexao, $sql);
+        mysqli_stmt_bind_param($stmt, "s", $email_digitado);
+        mysqli_stmt_execute($stmt);
+        $resultado = mysqli_stmt_get_result($stmt);
 
-            if ($email_digitado === $dados_usuario['email'] && $senha_digitada === $dados_usuario['senha']) {
+        if ($usuario_banco = mysqli_fetch_assoc($resultado)) {
+            // O usuário existe! Vamos validar se o nome e a senha batem
+            if ($senha_digitada === $usuario_banco['senha'] && $nome_digitado === $usuario_banco['nome']) {
+                
+                // Define as sessões com os dados vindos do banco de dados
                 $_SESSION['logado'] = true;
-                $_SESSION['usuario'] = $nome_digitado;
-                $_SESSION['perfil'] = 'admin';
-                $newClient = new Client($nome_digitado, $email_digitado, $senha_digitada);
-                addClient($newClient);
+                $_SESSION['usuario'] = $usuario_banco['nome'];
+                $_SESSION['perfil'] = $usuario_banco['perfil']; // 'admin' ou 'cliente'
+                
                 header("Location: home.php");
                 exit();
             } else {
-                $erro = "Credenciais incorretas para administrador.";
+                $erro = "Nome ou Senha incorretos para o e-mail informado!";
             }
         } else {
-            // LOGIN LIVRE: Qualquer outro usuário entra como 'cliente'
-            $_SESSION['logado'] = true;
-            $_SESSION['usuario'] = $nome_digitado;
-            $_SESSION['perfil'] = 'cliente';
-            header("Location: home.php");
-            exit();
+            // 3. Se o e-mail NÃO existe, aplicamos o seu "Login Livre" salvando no Banco!
+            $perfil_padrao = 'cliente';
+            
+            $sql_insert = "INSERT INTO usuarios (nome, email, senha, perfil) VALUES (?, ?, ?, ?)";
+            $stmt_insert = mysqli_prepare($conexao, $sql_insert);
+            mysqli_stmt_bind_param($stmt_insert, "ssss", $nome_digitado, $email_digitado, $senha_digitada, $perfil_padrao);
+            
+            if (mysqli_stmt_execute($stmt_insert)) {
+                // Cadastrado com sucesso! Criamos a sessão para logar o novo cliente direto
+                $_SESSION['logado'] = true;
+                $_SESSION['usuario'] = $nome_digitado;
+                $_SESSION['perfil'] = $perfil_padrao;
+                
+                header("Location: home.php");
+                exit();
+            } else {
+                $erro = "Erro ao registrar novo usuário no banco de dados. Tente novamente.";
+            }
         }
     }
 }
-ob_end_flush();
 ?>
 
 <!DOCTYPE html>
@@ -110,7 +129,7 @@ ob_end_flush();
 
                 <button type="submit"
                     class="w-full bg-stone-900 text-white font-black uppercase tracking-[0.2em] text-[11px] py-5 rounded-2xl hover:bg-black hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-stone-200 mt-4 flex items-center justify-center gap-2">
-                    Entrar no Sistema
+                    Entrar
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </button>
             </form>

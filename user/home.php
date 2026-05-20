@@ -65,6 +65,12 @@ if($resultado){
                 Item adicionado com sucesso ao seu pedido!
             </div>
         <?php endif; ?>
+        <?php if (isset($_GET['sucesso']) && $_GET['sucesso'] === 'pedido_realizado'): ?>
+    <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-black uppercase tracking-widest rounded-2xl flex items-center gap-2">
+        <i data-lucide="sparkles" class="w-4 h-4"></i>
+        Pedido lançado com sucesso! Ele já foi registrado no nosso banco de dados.
+    </div>
+<?php endif; ?>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             

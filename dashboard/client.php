@@ -1,43 +1,72 @@
 <?php
 declare(strict_types=1);
+
+// Importa a sua conexão atual (que usa $conexao)
+require_once __DIR__ . '/../auth/conexao.php'; 
 require_once __DIR__ . '/../auth/ClientClass.php';
 require_once __DIR__ . '/../auth/verificarADM.php';
-require_once __DIR__ . '/../auth/ClientClass.php';
 
 date_default_timezone_set('America/Sao_Paulo');
 
 $message = "";
-function updateClient(Client $clientRequest, int $id) {
-    $found = false;
-    foreach ($_SESSION['listClients'] as $client) {
-        if ($client->id == $id) {
-            if (!empty($clientRequest->name)) $client->name = $clientRequest->name;
-            if (!empty($clientRequest->email)) $client->email = $clientRequest->email;
-            if (!empty($clientRequest->password)) $client->password = $clientRequest->password;
-            $found = true;
-            break;
-        }
-    }
-    return $found;
+
+// --- FUNÇÕES OPERANDO COM MYSQLI ---
+
+function dbAddClient($conexao, Client $clientRequest): bool {
+    $sql = "INSERT INTO usuarios (nome, email, senha, perfil) VALUES (?, ?, ?, 'cliente')";
+    $stmt = mysqli_prepare($conexao, $sql);
+    mysqli_stmt_bind_param($stmt, "sss", $clientRequest->name, $clientRequest->email, $clientRequest->password);
+    return mysqli_stmt_execute($stmt);
 }
 
-function deleteClient(int $id) {
-    $found = false;
-    foreach ($_SESSION['listClients'] as $index => $client) {
-        if ($client->id == $id) {
-            $found = true;
-            unset($_SESSION['listClients'][$index]);
-            $_SESSION['listClients'] = array_values($_SESSION['listClients']);
-            break;
-        }
+function dbUpdateClient($conexao, Client $clientRequest, int $id): bool {
+    $fields = [];
+    $types = "";
+    $params = [];
+
+    if (!empty($clientRequest->name)) {
+        $fields[] = "nome = ?";
+        $types .= "s";
+        $params[] = $clientRequest->name;
+    }
+    if (!empty($clientRequest->email)) {
+        $fields[] = "email = ?";
+        $types .= "s";
+        $params[] = $clientRequest->email;
+    }
+    if (!empty($clientRequest->password)) {
+        $fields[] = "senha = ?";
+        $types .= "s";
+        $params[] = $clientRequest->password;
     }
 
-    if ($found) {
+    if (empty($fields)) return false;
+
+    $sql = "UPDATE usuarios SET " . implode(', ', $fields) . " WHERE id = ? AND perfil = 'cliente'";
+    $types .= "i";
+    $params[] = $id;
+
+    $stmt = mysqli_prepare($conexao, $sql);
+    mysqli_stmt_bind_param($stmt, $types, ...$params);
+    mysqli_stmt_execute($stmt);
+    
+    return mysqli_stmt_affected_rows($stmt) > 0;
+}
+
+function dbDeleteClient($conexao, int $id): string {
+    $sql = "DELETE FROM usuarios WHERE id = ? AND perfil = 'cliente'";
+    $stmt = mysqli_prepare($conexao, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $id);
+    mysqli_stmt_execute($stmt);
+
+    if (mysqli_stmt_affected_rows($stmt) > 0) {
         return "<div class='bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl mb-6 flex items-center gap-2'><i data-lucide='trash-2' class='w-4 h-4'></i> Cliente removido com sucesso</div>";
     } else {
-        return "<div class='bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl mb-6'>Cliente não encontrado</div>";
+        return "<div class='bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl mb-6'>Cliente não encontrado ou não permitido</div>";
     }
 }
+
+// --- PROCESSAMENTO DOS FORMULÁRIOS ---
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? 'create';
@@ -47,8 +76,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = "<div class='bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl mb-6'>Erro: Preencha todos os campos!</div>";
         } else {
             $client = new Client($_POST['client_name'], $_POST['client_email'], $_POST['client_password']);
-            addClient($client);
-            $message = "<div class='bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl mb-6'>Cliente cadastrado com sucesso!</div>";
+            
+            // Passando $conexao em vez de $pdo
+            if (@dbAddClient($conexao, $client)) {
+                $message = "<div class='bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl mb-6'>Cliente cadastrado com sucesso!</div>";
+            } else {
+                if (mysqli_errno($conexao) == 1062) { // Código MySQLi para registro duplicado
+                    $message = "<div class='bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl mb-6'>Erro: Este e-mail já está cadastrado!</div>";
+                } else {
+                    $message = "<div class='bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl mb-6'>Erro ao cadastrar no banco de dados.</div>";
+                }
+            }
         }
     } elseif ($action === 'update') {
         $id = (int) ($_POST['client_id'] ?? 0);
@@ -57,18 +95,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['client_email'] ?? '',
             $_POST['client_password'] ?? ''
         );
-        if (updateClient($clientReq, $id)) {
+        
+        if (dbUpdateClient($conexao, $clientReq, $id)) {
             $message = "<div class='bg-sky-50 border border-sky-200 text-sky-800 px-4 py-3 rounded-xl mb-6'>Cliente #$id atualizado com sucesso!</div>";
         } else {
-            $message = "<div class='bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl mb-6'>Erro: Cliente #$id não encontrado!</div>";
+            $message = "<div class='bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl mb-6'>Erro: Nenhuma alteração feita ou cliente #$id não encontrado!</div>";
         }
     } elseif ($action === "delete") {
         $id = (int) $_POST['client_id'];
-        $message = deleteClient($id);
+        $message = dbDeleteClient($conexao, $id);
     }
 }
 
-$totalClients = count($_SESSION['listClients']);
+// --- BUSCA OS DADOS UTILIZANDO MYSQLI (Retornando Objetos) ---
+global $conexao; // 👈 ADICIONE ESTA LINHA AQUI!
+
+$result = mysqli_query($conexao, "SELECT id, nome AS name, email, senha AS password FROM usuarios WHERE perfil = 'cliente' ORDER BY id DESC");
+$listClients = [];
+if ($result) {
+    while ($row = mysqli_fetch_object($result)) {
+        $listClients[] = $row;
+    }
+}
+$totalClients = count($listClients);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -77,20 +126,13 @@ $totalClients = count($_SESSION['listClients']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L'Essence | Gestão de Clientes</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    
     <script src="https://unpkg.com/lucide@latest"></script>
-
     <style>
-        /* Define as fontes padrão para as classes do Tailwind */
         body { font-family: 'Inter', sans-serif; }
         .font-serif { font-family: 'Instrument Serif', serif !important; }
-        
-        /* Ajuste fino para suavizar as fontes no navegador */
         * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
     </style>
-</head>
 </head>
 <body class="text-stone-900 antialiased">
     <div class="max-w-6xl mx-auto px-6">
@@ -108,6 +150,7 @@ $totalClients = count($_SESSION['listClients']);
                 <span class="text-xs font-bold uppercase tracking-widest"><?= date('d/m/Y') ?></span>
             </div>
         </header>
+
         <?= $message ?>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
@@ -204,12 +247,12 @@ $totalClients = count($_SESSION['listClients']);
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-stone-100">
-                                <?php foreach ($_SESSION['listClients'] as $c): ?>
+                                <?php foreach ($listClients as $c): ?>
                                 <tr class="group hover:bg-stone-50/30 transition-colors">
                                     <td class="px-8 py-6">
                                         <div class="flex items-center gap-4">
                                             <div class="w-10 h-10 bg-stone-100 rounded-full flex items-center justify-center text-stone-500 font-bold text-xs">
-                                                <?= strtoupper(substr($c-> name?? '', 0, 1)) ?>
+                                                <?= strtoupper(substr($c->name ?? '', 0, 1)) ?>
                                             </div>
                                             <div>
                                                 <p class="font-bold text-stone-900">#<?= $c->id ?? '0' ?> - <?= htmlspecialchars($c->name ?? 'Nome Indisponível') ?></p>
@@ -234,7 +277,7 @@ $totalClients = count($_SESSION['listClients']);
                                         <form method="POST" onsubmit="return confirm('Excluir este cliente permanentemente?');">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="client_id" value="<?= $c->id ?>">
-                                            <button type="submit" class="p-3 text-stone-400 btn-delete rounded-xl transition-all">
+                                            <button type="submit" class="p-3 text-stone-400 btn-delete rounded-xl transition-all hover:text-red-600">
                                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
                                         </form>
@@ -242,7 +285,7 @@ $totalClients = count($_SESSION['listClients']);
                                 </tr>
                                 <?php endforeach; ?>
 
-                                <?php if (empty($_SESSION['listClients'])): ?>
+                                <?php if (empty($listClients)): ?>
                                 <tr>
                                     <td colspan="4" class="px-8 py-24 text-center">
                                         <div class="flex flex-col items-center gap-4 text-stone-300">

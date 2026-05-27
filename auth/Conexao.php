@@ -1,13 +1,19 @@
 <?php 
-    date_default_timezone_set('America/Sao_Paulo');
+// auth/Conexao.php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-    $servidor = "localhost";
-    $usuario = "root";
-    $senha = "";
-    $dbname = "lessence";
+date_default_timezone_set('America/Sao_Paulo');
 
-    $conexao = mysqli_connect($servidor, $usuario, $senha, $dbname);
-    if($conexao->connect_error){
-        die("Conexão falhou: " . $conexao->connect_error);
-    }
+$servidor = "localhost";
+$usuario  = "root";
+$senha    = "";
+$dbname   = "lessence";
+
+$conexao = mysqli_connect($servidor, $usuario, $senha, $dbname);
+
+if (!$conexao) {
+    die("A conexão com o banco de dados falhou: " . mysqli_connect_error());
+}
 ?>

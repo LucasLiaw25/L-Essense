@@ -1,344 +1,160 @@
 <?php
+// dashboard/client.php
 declare(strict_types=1);
 
-// Importa a sua conexão atual (que usa $conexao)
-require_once __DIR__ . '/../auth/conexao.php'; 
+require_once __DIR__ . '/../auth/Conexao.php'; 
 require_once __DIR__ . '/../auth/ClientClass.php';
 require_once __DIR__ . '/../auth/verificarADM.php';
 
-date_default_timezone_set('America/Sao_Paulo');
-
 $message = "";
-
-// --- FUNÇÕES OPERANDO COM MYSQLI ---
-
-function dbAddClient($conexao, Client $clientRequest): bool {
-    $sql = "INSERT INTO usuarios (nome, email, senha, perfil) VALUES (?, ?, ?, 'cliente')";
-    $stmt = mysqli_prepare($conexao, $sql);
-    mysqli_stmt_bind_param($stmt, "sss", $clientRequest->name, $clientRequest->email, $clientRequest->password);
-    return mysqli_stmt_execute($stmt);
-}
-
-function dbUpdateClient($conexao, Client $clientRequest, int $id): bool {
-    $fields = [];
-    $types = "";
-    $params = [];
-
-    if (!empty($clientRequest->name)) {
-        $fields[] = "nome = ?";
-        $types .= "s";
-        $params[] = $clientRequest->name;
-    }
-    if (!empty($clientRequest->email)) {
-        $fields[] = "email = ?";
-        $types .= "s";
-        $params[] = $clientRequest->email;
-    }
-    if (!empty($clientRequest->password)) {
-        $fields[] = "senha = ?";
-        $types .= "s";
-        $params[] = $clientRequest->password;
-    }
-
-    if (empty($fields)) return false;
-
-    $sql = "UPDATE usuarios SET " . implode(', ', $fields) . " WHERE id = ? AND perfil = 'cliente'";
-    $types .= "i";
-    $params[] = $id;
-
-    $stmt = mysqli_prepare($conexao, $sql);
-    mysqli_stmt_bind_param($stmt, $types, ...$params);
-    mysqli_stmt_execute($stmt);
-    
-    return mysqli_stmt_affected_rows($stmt) > 0;
-}
-
-function dbDeleteClient($conexao, int $id): string {
-    $sql = "DELETE FROM usuarios WHERE id = ? AND perfil = 'cliente'";
-    $stmt = mysqli_prepare($conexao, $sql);
-    mysqli_stmt_bind_param($stmt, "i", $id);
-    mysqli_stmt_execute($stmt);
-
-    if (mysqli_stmt_affected_rows($stmt) > 0) {
-        return "<div class='bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl mb-6 flex items-center gap-2'><i data-lucide='trash-2' class='w-4 h-4'></i> Cliente removido com sucesso</div>";
-    } else {
-        return "<div class='bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl mb-6'>Cliente não encontrado ou não permitido</div>";
-    }
-}
-
-// --- PROCESSAMENTO DOS FORMULÁRIOS ---
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? 'create';
+    $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
 
-    if ($action === 'create') {
-        if (empty($_POST['client_name']) || empty($_POST['client_email']) || empty($_POST['client_password'])) {
-            $message = "<div class='bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl mb-6'>Erro: Preencha todos os campos!</div>";
+    if ($action === 'create' && !empty($name) && !empty($email)) {
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+        $sql = "INSERT INTO usuarios (nome, email, senha, perfil) VALUES (?, ?, ?, 'cliente')";
+        $stmt = mysqli_prepare($conexao, $sql);
+        mysqli_stmt_bind_param($stmt, "sss", $name, $email, $hash);
+        if (mysqli_stmt_execute($stmt)) $message = "Cliente cadastrado!";
+        mysqli_stmt_close($stmt);
+    } elseif ($action === 'update' && $id > 0) {
+        if (!empty($password)) {
+            $hash = password_hash($password, PASSWORD_DEFAULT);
+            $sql = "UPDATE usuarios SET nome = ?, email = ?, senha = ? WHERE id = ? AND perfil = 'cliente'";
+            $stmt = mysqli_prepare($conexao, $sql);
+            mysqli_stmt_bind_param($stmt, "sssi", $name, $email, $hash, $id);
         } else {
-            $client = new Client($_POST['client_name'], $_POST['client_email'], $_POST['client_password']);
-            
-            // Passando $conexao em vez de $pdo
-            if (@dbAddClient($conexao, $client)) {
-                $message = "<div class='bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl mb-6'>Cliente cadastrado com sucesso!</div>";
-            } else {
-                if (mysqli_errno($conexao) == 1062) { // Código MySQLi para registro duplicado
-                    $message = "<div class='bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl mb-6'>Erro: Este e-mail já está cadastrado!</div>";
-                } else {
-                    $message = "<div class='bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl mb-6'>Erro ao cadastrar no banco de dados.</div>";
-                }
-            }
+            $sql = "UPDATE usuarios SET nome = ?, email = ? WHERE id = ? AND perfil = 'cliente'";
+            $stmt = mysqli_prepare($conexao, $sql);
+            mysqli_stmt_bind_param($stmt, "ssi", $name, $email, $id);
         }
-    } elseif ($action === 'update') {
-        $id = (int) ($_POST['client_id'] ?? 0);
-        $clientReq = new Client(
-            $_POST['client_name'] ?? '',
-            $_POST['client_email'] ?? '',
-            $_POST['client_password'] ?? ''
-        );
-        
-        if (dbUpdateClient($conexao, $clientReq, $id)) {
-            $message = "<div class='bg-sky-50 border border-sky-200 text-sky-800 px-4 py-3 rounded-xl mb-6'>Cliente #$id atualizado com sucesso!</div>";
-        } else {
-            $message = "<div class='bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl mb-6'>Erro: Nenhuma alteração feita ou cliente #$id não encontrado!</div>";
-        }
-    } elseif ($action === "delete") {
-        $id = (int) $_POST['client_id'];
-        $message = dbDeleteClient($conexao, $id);
+        if (mysqli_stmt_execute($stmt)) $message = "Dados atualizados!";
+        mysqli_stmt_close($stmt);
+    } elseif ($action === 'delete' && $id > 0) {
+        $sql = "DELETE FROM usuarios WHERE id = ? AND perfil = 'cliente'";
+        $stmt = mysqli_prepare($conexao, $sql);
+        mysqli_stmt_bind_param($stmt, "i", $id);
+        if (mysqli_stmt_execute($stmt)) $message = "Cliente removido!";
+        mysqli_stmt_close($stmt);
     }
 }
 
-// --- BUSCA OS DADOS UTILIZANDO MYSQLI (Retornando Objetos) ---
-global $conexao; // 👈 ADICIONE ESTA LINHA AQUI!
-
-$result = mysqli_query($conexao, "SELECT id, nome AS name, email, senha AS password FROM usuarios WHERE perfil = 'cliente' ORDER BY id DESC");
-$listClients = [];
-if ($result) {
-    while ($row = mysqli_fetch_object($result)) {
-        $listClients[] = $row;
-    }
-}
-$totalClients = count($listClients);
+$sql = "SELECT id, nome, email FROM usuarios WHERE perfil = 'cliente' ORDER BY id DESC";
+$res = mysqli_query($conexao, $sql);
+$clients = mysqli_fetch_all($res, MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>L'Essence | Gestão de Clientes</title>
+    <title>Painel de Clientes - L-Essense</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .font-serif { font-family: 'Instrument Serif', serif !important; }
-        * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-    </style>
+    <style>body { font-family: 'Inter', sans-serif; } .font-serif { font-family: 'Instrument Serif', serif; }</style>
 </head>
-<body class="text-stone-900 antialiased">
-    <div class="max-w-6xl mx-auto px-6">
-        <?php require '../user/menu.php'; ?>
-    </div>
+<body class="bg-stone-50 text-stone-900 min-h-screen p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <?php include '../user/menu.php'; ?>
 
-    <div class="max-w-6xl mx-auto px-4 py-12">
-        <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
-            <div>
-                <h1 class="text-5xl font-serif font-bold tracking-tight text-stone-900">Gestão de Clientes</h1>
-                <p class="text-stone-500 mt-2 font-medium">Administre sua base de membros com sofisticação.</p>
-            </div>
-            <div class="flex items-center gap-2 text-stone-400 bg-white border border-stone-100 px-4 py-2 rounded-2xl shadow-sm">
-                <i data-lucide="calendar" class="w-4 h-4"></i>
-                <span class="text-xs font-bold uppercase tracking-widest"><?= date('d/m/Y') ?></span>
-            </div>
-        </header>
-
-        <?= $message ?>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
-            <div class="bg-white border border-stone-200 p-6 rounded-[2rem] shadow-sm flex items-center gap-6">
-                <div class="w-14 h-14 bg-stone-50 rounded-2xl flex items-center justify-center border border-stone-100">
-                    <i data-lucide="user-plus" class="w-7 h-7 text-stone-600"></i>
-                </div>
-                <div>
-                    <p class="text-4xl font-black text-stone-900"><?= $totalClients ?></p>
-                    <p class="text-[10px] font-black uppercase tracking-[0.15em] text-stone-400 mt-1">Total de Clientes</p>
-                </div>
-            </div>
-
-            <div class="bg-white border border-stone-200 p-6 rounded-[2rem] shadow-sm flex items-center gap-6">
-                <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center border border-emerald-100">
-                    <i data-lucide="shield-check" class="w-7 h-7 text-emerald-600"></i>
-                </div>
-                <div>
-                    <p class="text-4xl font-black text-emerald-900"><?= $totalClients > 0 ? 'Ativo' : 'Pendente' ?></p>
-                    <p class="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-500 mt-1">Status do Banco</p>
-                </div>
-            </div>
-
-            <div class="bg-white border border-stone-200 p-6 rounded-[2rem] shadow-sm flex items-center gap-6">
-                <div class="w-14 h-14 bg-stone-900 rounded-2xl flex items-center justify-center">
-                    <i data-lucide="clock" class="w-7 h-7 text-stone-50"></i>
-                </div>
-                <div>
-                    <p class="text-xl font-bold text-stone-900"><?= date('H:i') ?></p>
-                    <p class="text-[10px] font-black uppercase tracking-[0.15em] text-stone-400 mt-1">Última Sincronização</p>
-                </div>
-            </div>
+        <div class="mb-8 border-b border-stone-200 pb-3">
+            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 block mb-1">Módulo Administrativo</span>
+            <h1 class="font-serif text-4xl italic text-stone-950">Controle de Clientes</h1>
         </div>
 
-        <div class="grid lg:grid-cols-[380px_1fr] gap-10 items-start">
-            <aside class="sticky top-8">
-                <div class="bg-white border border-stone-200 rounded-[2.5rem] p-8 shadow-sm">
-                    <h2 id="formTitle" class="text-2xl font-serif font-bold mb-8 text-stone-800">Novo Cliente</h2>
-                    
-                    <form method="POST" class="space-y-6">
-                        <input type="hidden" name="action" id="formAction" value="create">
-                        
-                        <div id="idField" class="group hidden">
-                            <label class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2 block px-1">ID do Cliente</label>
-                            <input type="number" name="client_id" placeholder="Ex: 1" class="w-full bg-amber-50/50 border-amber-100 rounded-2xl p-4 text-sm focus:ring-4 focus:ring-amber-50 outline-none transition-all border group-hover:border-amber-200 font-bold">
-                        </div>
+        <?php if (!empty($message)): ?>
+            <div class="p-4 bg-stone-900 text-white text-xs font-bold rounded-2xl mb-6 shadow-md">
+                <?php echo htmlspecialchars($message); ?>
+            </div>
+        <?php endif; ?>
 
-                        <div class="group">
-                            <label class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2 block px-1">Nome Completo</label>
-                            <input type="text" name="client_name" placeholder="Ex: Lucas Liaw" class="w-full bg-stone-50 border-stone-200 rounded-2xl p-4 text-sm focus:ring-4 focus:ring-stone-100 outline-none transition-all border group-hover:border-stone-300">
-                        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm h-fit">
+                <h2 id="formTitle" class="text-xs font-black uppercase tracking-widest text-stone-400 border-b pb-3 mb-4">Novo Registro</h2>
+                <form id="clientForm" action="" method="POST" class="space-y-4">
+                    <input type="hidden" name="action" id="formAction" value="create">
+                    <input type="hidden" name="id" id="clientId" value="">
 
-                        <div class="group">
-                            <label class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2 block px-1">E-mail Institucional</label>
-                            <input type="email" name="client_email" placeholder="email@exemplo.com" class="w-full bg-stone-50 border-stone-200 rounded-2xl p-4 text-sm focus:ring-4 focus:ring-stone-100 outline-none transition-all border group-hover:border-stone-300">
-                        </div>
-
-                        <div class="group">
-                            <label class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2 block px-1">Senha de Acesso</label>
-                            <div class="relative">
-                                <input type="password" name="client_password" placeholder="••••••••" class="w-full bg-stone-50 border-stone-200 rounded-2xl p-4 text-sm focus:ring-4 focus:ring-stone-100 outline-none transition-all border group-hover:border-stone-300">
-                                <i data-lucide="lock" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-300"></i>
-                            </div>
-                        </div>
-
-                        <div class="pt-6 space-y-3">
-                            <button type="submit" id="mainSubmit" class="w-full bg-stone-900 hover:bg-black text-stone-50 font-bold py-5 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-lg shadow-stone-200">
-                                <i data-lucide="user-plus" class="w-5 h-5"></i> <span id="btnText">Cadastrar Cliente</span>
-                            </button>
-                            
-                            <button type="button" id="toggleMode" class="w-full bg-white border border-stone-200 hover:bg-stone-50 text-stone-600 font-bold py-4 rounded-2xl transition-all text-sm">
-                                Atualizar Cliente
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </aside>
-
-            <main class="space-y-6">
-                <div class="bg-white border border-stone-200 rounded-[2.5rem] shadow-sm overflow-hidden">
-                    <div class="p-8 border-b border-stone-100 flex justify-between items-center">
-                        <h2 class="text-2xl font-serif font-bold text-stone-800">Membros Registrados</h2>
-                        <span class="text-[10px] font-black text-stone-400 uppercase tracking-widest bg-stone-50 px-3 py-1 rounded-full border border-stone-100"><?= $totalClients ?> Clientes</span>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2">Nome do Cliente</label>
+                        <input type="text" name="name" id="cName" required class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 text-sm font-medium rounded-xl outline-none focus:border-stone-400 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2">E-mail</label>
+                        <input type="email" name="email" id="cEmail" required class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 text-sm font-medium rounded-xl outline-none focus:border-stone-400 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2">Senha <span id="pwdLabel" class="text-[9px] text-stone-400 lowercase italic">(obrigatório para novos)</span></label>
+                        <input type="password" name="password" id="cPassword" class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 text-sm font-medium rounded-xl outline-none focus:border-stone-400 transition-all">
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-stone-50/50 text-[10px] font-black uppercase tracking-[0.2em] text-stone-400">
-                                    <th class="px-8 py-5">ID & Nome</th>
-                                    <th class="px-8 py-5">Contato</th>
-                                    <th class="px-8 py-5">Segurança</th>
-                                    <th class="px-8 py-5 text-right">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-stone-100">
-                                <?php foreach ($listClients as $c): ?>
-                                <tr class="group hover:bg-stone-50/30 transition-colors">
-                                    <td class="px-8 py-6">
-                                        <div class="flex items-center gap-4">
-                                            <div class="w-10 h-10 bg-stone-100 rounded-full flex items-center justify-center text-stone-500 font-bold text-xs">
-                                                <?= strtoupper(substr($c->name ?? '', 0, 1)) ?>
-                                            </div>
-                                            <div>
-                                                <p class="font-bold text-stone-900">#<?= $c->id ?? '0' ?> - <?= htmlspecialchars($c->name ?? 'Nome Indisponível') ?></p>
-                                                <p class="text-[10px] text-stone-400 uppercase tracking-tighter">Membro Premium</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-8 py-6">
-                                        <p class="text-sm text-stone-600 font-medium"><?= htmlspecialchars($c->email) ?></p>
-                                    </td>
-                                    <td class="px-8 py-6">
-                                        <div class="flex items-center gap-2">
-                                            <div class="flex gap-0.5">
-                                                <?php for($i=0; $i<5; $i++): ?>
-                                                    <span class="w-1 h-1 rounded-full bg-stone-200"></span>
-                                                <?php endfor; ?>
-                                            </div>
-                                            <span class="text-[10px] font-bold text-stone-300 uppercase">Protegida</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-8 py-6 text-right">
-                                        <form method="POST" onsubmit="return confirm('Excluir este cliente permanentemente?');">
+                    <button type="submit" class="w-full py-3 bg-stone-900 text-white font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-black transition-all">
+                        Salvar Cliente
+                    </button>
+                    <button type="button" id="btnCancel" onclick="resetForm()" class="w-full py-2 bg-stone-100 text-stone-600 font-black uppercase tracking-widest text-[9px] rounded-xl hover:bg-stone-200 transition-all hidden">
+                        Cancelar Edição
+                    </button>
+                </form>
+            </div>
+
+            <div class="lg:col-span-2 bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-stone-50 text-stone-400 border-b border-stone-100 font-black uppercase tracking-wider text-[9px]">
+                                <th class="p-4">ID</th>
+                                <th class="p-4">Nome</th>
+                                <th class="p-4">E-mail</th>
+                                <th class="p-4 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-100 font-medium text-stone-700">
+                            <?php foreach ($clients as $c): ?>
+                                <tr class="hover:bg-stone-50/60 transition-all">
+                                    <td class="p-4 font-mono text-stone-400">#<?php echo $c['id']; ?></td>
+                                    <td class="p-4 font-bold text-stone-900"><?php echo htmlspecialchars($c['nome']); ?></td>
+                                    <td class="p-4 text-stone-500"><?php echo htmlspecialchars($c['email']); ?></td>
+                                    <td class="p-4 text-right space-x-1">
+                                        <button onclick="editClient(<?php echo htmlspecialchars(json_encode($c)); ?>)" class="p-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-all"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+                                        <form action="" method="POST" class="inline">
                                             <input type="hidden" name="action" value="delete">
-                                            <input type="hidden" name="client_id" value="<?= $c->id ?>">
-                                            <button type="submit" class="p-3 text-stone-400 btn-delete rounded-xl transition-all hover:text-red-600">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                            </button>
+                                            <input type="hidden" name="id" value="<?php echo $c['id']; ?>">
+                                            <button type="submit" onclick="return confirm('Deseja banir/deletar este cliente?')" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all"><i data-lucide="user-x" class="w-3.5 h-3.5"></i></button>
                                         </form>
                                     </td>
                                 </tr>
-                                <?php endforeach; ?>
-
-                                <?php if (empty($listClients)): ?>
-                                <tr>
-                                    <td colspan="4" class="px-8 py-24 text-center">
-                                        <div class="flex flex-col items-center gap-4 text-stone-300">
-                                            <div class="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center">
-                                                <i data-lucide="user-x" class="w-8 h-8"></i>
-                                            </div>
-                                            <p class="font-serif text-xl italic text-stone-400">Nenhum cliente registrado ainda.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
-            </main>
+            </div>
         </div>
     </div>
-
     <script>
         lucide.createIcons();
-
-        const toggleBtn = document.getElementById('toggleMode');
-        const formAction = document.getElementById('formAction');
-        const formTitle = document.getElementById('formTitle');
-        const idField = document.getElementById('idField');
-        const btnText = document.getElementById('btnText');
-        const mainSubmit = document.getElementById('mainSubmit');
-
-        let isUpdateMode = false;
-
-        toggleBtn.addEventListener('click', () => {
-            isUpdateMode = !isUpdateMode;
-
-            if (isUpdateMode) {
-                formAction.value = 'update';
-                formTitle.innerText = 'Atualizar Cliente';
-                btnText.innerText = 'Salvar Alterações';
-                toggleBtn.innerText = 'Novo Cadastro';
-                idField.classList.remove('hidden');
-                mainSubmit.classList.replace('bg-stone-900', 'bg-sky-700');
-                mainSubmit.classList.replace('hover:bg-black', 'hover:bg-sky-800');
-            } else {
-                formAction.value = 'create';
-                formTitle.innerText = 'Novo Registro';
-                btnText.innerText = 'Cadastrar Cliente';
-                toggleBtn.innerText = 'Atualizar Cliente';
-                idField.classList.add('hidden');
-                mainSubmit.classList.replace('bg-sky-700', 'bg-stone-900');
-                mainSubmit.classList.replace('hover:bg-sky-800', 'hover:bg-black');
-            }
-        });
+        function editClient(client) {
+            document.getElementById('formAction').value = 'update';
+            document.getElementById('clientId').value = client.id;
+            document.getElementById('cName').value = client.nome;
+            document.getElementById('cEmail').value = client.email;
+            document.getElementById('formTitle').innerText = 'Editar Cliente #' + client.id;
+            document.getElementById('pwdLabel').innerText = '(deixe em branco para não alterar)';
+            document.getElementById('btnCancel').classList.remove('hidden');
+        }
+        function resetForm() {
+            document.getElementById('clientForm').reset();
+            document.getElementById('formAction').value = 'create';
+            document.getElementById('clientId').value = '';
+            document.getElementById('formTitle').innerText = 'Novo Registro';
+            document.getElementById('pwdLabel').innerText = '(obrigatório para novos)';
+            document.getElementById('btnCancel').classList.add('hidden');
+        }
     </script>
-    <?php include '../user/rodape.php' ?>
 </body>
 </html>

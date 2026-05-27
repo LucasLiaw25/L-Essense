@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 20/05/2026 às 02:27
+-- Tempo de geração: 27/05/2026 às 02:36
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -24,6 +24,43 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Estrutura para tabela `pedidos`
+--
+
+CREATE TABLE `pedidos` (
+  `id` int(11) NOT NULL,
+  `usuario_id` int(11) NOT NULL,
+  `usuario_nome` varchar(100) NOT NULL,
+  `total` decimal(10,2) NOT NULL,
+  `status` varchar(50) DEFAULT 'Pendente',
+  `criado_em` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `pedidos`
+--
+
+INSERT INTO `pedidos` (`id`, `usuario_id`, `usuario_nome`, `total`, `status`, `criado_em`) VALUES
+(5, 1, 'admin', 75.00, 'Pendente', '2026-05-27 00:13:11');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `pedido_itens`
+--
+
+CREATE TABLE `pedido_itens` (
+  `id` int(11) NOT NULL,
+  `pedido_id` int(11) NOT NULL,
+  `produto_id` int(11) NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `preco` decimal(10,2) NOT NULL,
+  `quantidade` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estrutura para tabela `produtos`
 --
 
@@ -32,19 +69,16 @@ CREATE TABLE `produtos` (
   `nome` varchar(100) NOT NULL,
   `descricao` text DEFAULT NULL,
   `preco` decimal(10,2) NOT NULL,
-  `estoque` int(11) NOT NULL DEFAULT 0,
-  `criado_em` timestamp NOT NULL DEFAULT current_timestamp()
+  `estoque` int(11) NOT NULL,
+  `imagem` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Despejando dados para a tabela `produtos`
 --
 
-INSERT INTO `produtos` (`id`, `nome`, `descricao`, `preco`, `estoque`, `criado_em`) VALUES
-(1, 'Filé Mignon ao Molho Madeira', 'Grelhado na perfeição, servido com arroz biro-biro e fritas.', 69.90, 15, '2026-05-19 23:55:12'),
-(2, 'Risoto de Camarão', 'Arbóreo cremoso com camarões salteados no vinho branco e parmesão.', 58.50, 10, '2026-05-19 23:55:12'),
-(3, 'Petit Gâteau', 'Bolinho quente de chocolate com recheio cremoso, acompanhado de sorvete.', 22.00, 20, '2026-05-19 23:55:12'),
-(4, 'Suco Natural de Laranja', 'Suco 100% puro da fruta, gelado e sem açúcar.', 9.00, 50, '2026-05-19 23:55:12');
+INSERT INTO `produtos` (`id`, `nome`, `descricao`, `preco`, `estoque`, `imagem`) VALUES
+(2, 'Sla', 'sal', 12.00, 12, 'f41b514ac36ea9dc5eaf795c0f4d86c7.png');
 
 -- --------------------------------------------------------
 
@@ -57,21 +91,34 @@ CREATE TABLE `usuarios` (
   `nome` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
   `senha` varchar(255) NOT NULL,
-  `perfil` enum('admin','cliente') DEFAULT 'cliente',
-  `criado_em` timestamp NOT NULL DEFAULT current_timestamp()
+  `perfil` varchar(50) DEFAULT 'cliente'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Despejando dados para a tabela `usuarios`
 --
 
-INSERT INTO `usuarios` (`id`, `nome`, `email`, `senha`, `perfil`, `criado_em`) VALUES
-(1, 'admin', 'admin@sistema.com', 'admin123', 'admin', '2026-05-19 23:33:22'),
-(2, 'Tilapia', 'noireb649@gmail.com', '123123', 'cliente', '2026-05-19 23:51:56');
+INSERT INTO `usuarios` (`id`, `nome`, `email`, `senha`, `perfil`) VALUES
+(1, 'admin', 'admin@sistema.com', 'admin123', 'admin');
 
 --
 -- Índices para tabelas despejadas
 --
+
+--
+-- Índices de tabela `pedidos`
+--
+ALTER TABLE `pedidos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_pedidos_usuarios` (`usuario_id`);
+
+--
+-- Índices de tabela `pedido_itens`
+--
+ALTER TABLE `pedido_itens`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `pedido_id` (`pedido_id`),
+  ADD KEY `produto_id` (`produto_id`);
 
 --
 -- Índices de tabela `produtos`
@@ -91,16 +138,45 @@ ALTER TABLE `usuarios`
 --
 
 --
+-- AUTO_INCREMENT de tabela `pedidos`
+--
+ALTER TABLE `pedidos`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT de tabela `pedido_itens`
+--
+ALTER TABLE `pedido_itens`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT de tabela `produtos`
 --
 ALTER TABLE `produtos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de tabela `usuarios`
 --
 ALTER TABLE `usuarios`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- Restrições para tabelas despejadas
+--
+
+--
+-- Restrições para tabelas `pedidos`
+--
+ALTER TABLE `pedidos`
+  ADD CONSTRAINT `fk_pedidos_usuarios` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Restrições para tabelas `pedido_itens`
+--
+ALTER TABLE `pedido_itens`
+  ADD CONSTRAINT `fk_itens_pedido` FOREIGN KEY (`pedido_id`) REFERENCES `pedidos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_itens_produto` FOREIGN KEY (`produto_id`) REFERENCES `produtos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

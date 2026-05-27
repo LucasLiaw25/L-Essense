@@ -1,141 +1,82 @@
-/* Configurações Gerais */
-@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600;700;900&display=swap");
+/* ==========================================================================
+   Configurações Gerais & Fontes - L-Essense
+   ========================================================================== */
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:italic&family=Inter:wght@400;500;600;700;900&display=swap");
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
 }
 
-body {
-    background-color: #f0f2f5;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    color: #333;
+/* Transição global suave para quando as páginas carregam ou mudam de estado */
+html {
+    scroll-behavior: smooth;
 }
 
-/* Container do Login */
-.login-container {
-    background: #fff;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px;
+/* ==========================================================================
+   Definições de Animações Customizadas (Keyframes)
+   ========================================================================== */
+
+/* 1. Entrada fluida de baixo para cima com ligeira escala */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.99);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
-h1 {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    color: #1a73e8;
+/* 2. Feedback de erro tátil (Abanar horizontal para alertas) */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
 }
 
-/* Formulário */
-form {
-    display: flex;
-    flex-direction: column;
+/* 3. Efeito de fade clássico para mensagens de sucesso */
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }
 
-label {
-    margin-bottom: 5px;
-    font-weight: bold;
-    font-size: 0.9rem;
+/* ==========================================================================
+   Classes de Animação Utilitárias
+   ========================================================================== */
+
+/* Aplicar nos blocos principais das páginas para nascerem de forma premium */
+.animate-fade-in-up {
+    animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-input {
-    padding: 12px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    transition: border-color 0.3s;
+/* Aplicar em caixas de erro do formulário de login ou alertas */
+.animate-shake {
+    animation: shake 0.4s ease-in-out;
 }
 
-input:focus {
-    border-color: #1a73e8;
-    outline: none;
+/* Mensagens de sucesso ou alertas simples */
+.animate-fade-in {
+    animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-button {
-    background-color: #1a73e8;
-    color: white;
-    padding: 12px;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s;
+/* Classes para efeito Cascata (Stagger) na listagem de produtos */
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+
+/* ==========================================================================
+   Melhorias de Micro-Interações Globais
+   ========================================================================== */
+
+/* Efeito de foco suave nos inputs que usam transições nativas */
+input, textarea, select {
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-button:hover {
-    background-color: #1557b0;
-}
-
-/* Mensagens de Erro */
-.erro-msg {
-    background-color: #fce8e6;
-    color: #d93025;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 15px;
-    text-align: center;
-    font-size: 0.85rem;
-}
-
-/* Menu e Dashboard */
-.dashboard-body {
-    display: block; /* Remove o flex do body para a dashboard */
-    padding: 20px;
-}
-
-nav {
-    background: #fff;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.btn-sair {
-    background-color: #dc3545;
-    color: white;
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 0.9rem;
-}
-footer {
-    box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
-}
-
-footer span {
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    letter-spacing: 1px;
-}
-/* Ajuste para o corpo da dashboard */
-.dashboard-layout {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh; /* Ocupa no mínimo a altura toda da tela */
-    margin: 0;
-}
-
-/* O container principal cresce para ocupar o espaço vazio */
-.main-content {
-    flex: 1; 
-    padding: 20px;
-}
-
-/* Estilo do Rodapé */
-.footer-sistema {
-    background-color: #fff;
-    padding: 20px;
-    text-align: center;
-    border-top: 1px solid #ddd;
-    width: 100%;
+/* Garante que imagens decorativas ou de produtos façam zoom elegante */
+.group:hover .group-hover\:scale-105 {
+    transform: scale(1.05);
 }

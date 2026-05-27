@@ -28,8 +28,8 @@ if ($_SESSION['perfil'] === 'admin') {
 }
 
 mysqli_stmt_execute($stmt_p);
-$res_pedidos = mysqli_stmt_get_result($stmt_p);
-$pedidos = mysqli_fetch_all($res_pedidos, MYSQLI_ASSOC);
+$resultado = mysqli_stmt_get_result($stmt_p);
+$pedidos = mysqli_fetch_all($resultado, MYSQLI_ASSOC);
 mysqli_stmt_close($stmt_p);
 ?>
 <!DOCTYPE html>
@@ -37,80 +37,75 @@ mysqli_stmt_close($stmt_p);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Histórico de Pedidos - L-Essense</title>
+    <title>Status dos Pedidos - L-Essense</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>body { font-family: 'Inter', sans-serif; } .font-serif { font-family: 'Instrument Serif', serif; }</style>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-serif { font-family: 'Instrument Serif', serif; }
+    </style>
 </head>
-<body class="bg-stone-50 text-stone-900 min-h-screen p-4 md:p-8">
+<body class="bg-stone-50 text-stone-800 p-4 md:p-8 min-h-screen">
     <div class="max-w-4xl mx-auto">
         <?php include '../user/menu.php'; ?>
 
-        <div class="mb-8 border-b border-stone-200 pb-3">
-            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 block mb-1">Módulo de Rastreamento</span>
-            <h1 class="font-serif text-4xl italic text-stone-950">Histórico de Pedidos</h1>
+        <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="font-serif text-4xl text-stone-950">Acompanhamento</h1>
+                <p class="text-stone-400 text-xs font-bold uppercase tracking-widest mt-1">Histórico e estados dos pedidos</p>
+            </div>
+            <span class="text-[10px] font-black bg-stone-200 text-stone-700 px-3 py-1.5 rounded-full uppercase tracking-wider">
+                <?php echo count($pedidos); ?> Pedidos Encontrados
+            </span>
         </div>
 
         <?php if (!empty($mensagem)): ?>
-            <div class="p-4 bg-stone-900 text-white text-xs font-bold rounded-2xl mb-6 flex items-center gap-2 shadow-md">
-                <i data-lucide="check" class="text-emerald-400 w-4 h-4"></i> <?php echo htmlspecialchars($mensagem); ?>
+            <div class="mb-6 p-4 bg-stone-900 text-stone-100 rounded-2xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 shadow-md">
+                <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i> <?php echo $mensagem; ?>
             </div>
         <?php endif; ?>
 
         <?php if (empty($pedidos)): ?>
-            <div class="bg-white rounded-2xl p-12 text-center border border-stone-200/60 italic text-stone-400 text-sm shadow-sm">
-                Nenhum registro de pedido localizado.
+            <div class="bg-white border border-stone-200/80 rounded-3xl p-12 text-center shadow-sm">
+                <i data-lucide="package-open" class="w-12 h-12 text-stone-300 mx-auto mb-4"></i>
+                <h3 class="font-serif text-xl text-stone-900 mb-1">Nenhum pedido efetuado</h3>
+                <p class="text-stone-400 text-sm max-w-sm mx-auto">Assim que um pedido for submetido na plataforma, ele aparecerá listado nesta secção.</p>
             </div>
         <?php else: ?>
-            <div class="space-y-5">
+            <div class="grid grid-cols-1 gap-4">
                 <?php foreach ($pedidos as $p): 
-                    $sql_items = "SELECT * FROM pedido_itens WHERE pedido_id = ?";
-                    $stmt_i = mysqli_prepare($conexao, $sql_items);
-                    mysqli_stmt_bind_param($stmt_i, "i", $p['id']);
-                    mysqli_stmt_execute($stmt_i);
-                    $res_items = mysqli_stmt_get_result($stmt_i);
-                    $itens = mysqli_fetch_all($res_items, MYSQLI_ASSOC);
-                    mysqli_stmt_close($stmt_i);
-
-                    // Cor do badge de status
-                    $badgeColor = "bg-stone-100 text-stone-600";
-                    if($p['status'] == 'Concluído') $badgeColor = "bg-emerald-50 text-emerald-700 border border-emerald-100";
-                    if($p['status'] == 'Cancelado') $badgeColor = "bg-red-50 text-red-700 border border-red-100";
+                    $corStatus = 'bg-stone-100 text-stone-700 border-stone-200';
+                    if ($p['status'] == 'Concluído') $corStatus = 'bg-emerald-50 text-emerald-700 border-emerald-200/60';
+                    if ($p['status'] == 'Cancelado') $corStatus = 'bg-red-50 text-red-700 border-red-200/60';
                 ?>
-                    <div class="bg-white border border-stone-200/60 p-6 rounded-2xl shadow-sm">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-stone-100 pb-4 mb-4">
-                            <div>
-                                <span class="text-xs font-mono font-bold text-stone-900 block">PEDIDO #<?php echo $p['id']; ?></span>
-                                <span class="text-[11px] text-stone-400 font-medium">Cliente: <?php echo htmlspecialchars($p['usuario_nome']); ?> | <?php echo date('d/m/Y H:i', strtotime($p['criado_em'])); ?></span>
-                            </div>
-                            <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                                <span class="text-sm font-mono font-bold text-stone-900">R$ <?php echo number_format((float)$p['total'], 2, ',', '.'); ?></span>
-                                <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest <?php echo $badgeColor; ?>">
-                                    <?php echo htmlspecialchars($p['status']); ?>
+                    <div class="bg-white border border-stone-200/80 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:border-stone-300">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2.5">
+                                <span class="font-mono text-xs font-bold text-stone-400">#<?php echo $p['id']; ?></span>
+                                <span class="text-sm font-bold text-stone-900"><?php echo htmlspecialchars($p['usuario_nome']); ?></span>
+                                <span class="text-[10px] font-black uppercase tracking-widest border px-2 py-0.5 rounded-md <?php echo $corStatus; ?>">
+                                    <?php echo $p['status']; ?>
                                 </span>
                             </div>
-                        </div>
-
-                        <div class="text-xs space-y-2 mb-4 text-stone-700 font-medium">
-                            <?php foreach ($itens as $i): ?>
-                                <div class="flex justify-between">
-                                    <span><?php echo $i['quantidade']; ?>x <span class="text-stone-900 font-semibold"><?php echo htmlspecialchars($i['nome']); ?></span></span>
-                                    <span class="text-stone-500 font-mono">R$ <?php echo number_format((float)$i['preco'], 2, ',', '.'); ?></span>
-                                </div>
-                            <?php endforeach; ?>
+                            <p class="text-stone-400 text-[11px] font-medium">Realizado em: <?php echo date('d/m/Y H:i', strtotime($p['criado_em'])); ?></p>
+                            <div class="text-lg font-serif text-stone-950 font-bold pt-1">
+                                R$ <?php echo number_format((float)$p['total'], 2, ',', '.'); ?>
+                            </div>
                         </div>
 
                         <?php if ($_SESSION['perfil'] === 'admin'): ?>
-                            <form action="" method="POST" class="flex gap-2 pt-3 border-t border-stone-100">
+                            <form action="" method="POST" class="flex items-center gap-2 w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-stone-100">
                                 <input type="hidden" name="pedido_id" value="<?php echo $p['id']; ?>">
-                                <select name="novo_status" class="bg-stone-50 text-stone-700 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest outline-none border border-stone-200 focus:border-stone-400 transition-all">
+                                
+                                <select name="novo_status" class="bg-stone-50 text-stone-700 rounded-xl px-3 h-10 text-[10px] font-black uppercase tracking-widest outline-none border border-stone-200 focus:border-stone-400 transition-all cursor-pointer">
                                     <option value="Pendente" <?php echo $p['status'] == 'Pendente' ? 'selected' : ''; ?>>Pendente</option>
                                     <option value="Concluído" <?php echo $p['status'] == 'Concluído' ? 'selected' : ''; ?>>Concluído</option>
                                     <option value="Cancelado" <?php echo $p['status'] == 'Cancelado' ? 'selected' : ''; ?>>Cancelado</option>
                                 </select>
-                                <button type="submit" name="alterar_status" class="bg-stone-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">
-                                    Atualizar Status
+                                
+                                <button type="submit" name="alterar_status" class="h-10 bg-stone-900 text-white px-5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-sm whitespace-nowrap">
+                                    Atualizar Estado
                                 </button>
                             </form>
                         <?php endif; ?>
@@ -119,7 +114,11 @@ mysqli_stmt_close($stmt_p);
             </div>
         <?php endif; ?>
     </div>
+
     <?php include '../user/rodape.php'; ?>
-    <script>lucide.createIcons();</script>
+
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>

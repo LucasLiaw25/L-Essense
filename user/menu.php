@@ -14,26 +14,26 @@
         </div>
     </div>
 
-    <div class="flex flex-wrap items-center justify-center gap-2 font-sans">
-        <a href="../user/home.php" class="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-stone-600 hover:text-stone-900 hover:bg-stone-100/70 rounded-xl transition-all">
-            <i data-lucide="home" class="w-3.5 h-3.5"></i> Início
-        </a>
+<div class="flex flex-wrap items-center justify-center gap-2 font-sans">
+    <a href="../user/home.php" class="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-stone-600 hover:text-stone-900 hover:bg-stone-100/80 rounded-xl transition-all duration-200 active:scale-95">
+        <i data-lucide="home" class="w-3.5 h-3.5"></i> Início
+    </a>
 
-        <a href="../dashboard/status.php" class="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-stone-600 hover:text-stone-900 hover:bg-stone-100/70 rounded-xl transition-all">
-            <i data-lucide="clock" class="w-3.5 h-3.5"></i> Pedidos
-        </a>
+    <a href="../dashboard/status.php" class="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-stone-600 hover:text-stone-900 hover:bg-stone-100/80 rounded-xl transition-all duration-200 active:scale-95">
+        <i data-lucide="clock" class="w-3.5 h-3.5"></i> Pedidos
+    </a>
 
-        <?php if (isset($_SESSION['perfil']) && $_SESSION['perfil'] === 'admin'): ?>
-            <a href="../dashboard/product.php" class="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider bg-stone-900 text-stone-50 hover:bg-black rounded-xl transition-all shadow-sm">
-                <i data-lucide="box" class="w-3.5 h-3.5"></i> Painel Produtos
-            </a>
-            <a href="../dashboard/client.php" class="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider bg-stone-900 text-stone-50 hover:bg-black rounded-xl transition-all shadow-sm">
-                <i data-lucide="users" class="w-3.5 h-3.5"></i> Painel Clientes
-            </a>
-        <?php endif; ?>
-
-        <a href="../auth/logout.php" class="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-red-500 hover:bg-red-50 rounded-xl transition-all ml-2">
-            <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sair
+    <?php if (isset($_SESSION['perfil']) && $_SESSION['perfil'] === 'admin'): ?>
+        <a href="../dashboard/product.php" class="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider bg-stone-900 text-stone-50 hover:bg-black hover:shadow-md rounded-xl transition-all duration-200 active:scale-95">
+            <i data-lucide="box" class="w-3.5 h-3.5"></i> Painel Produtos
         </a>
-    </div>
+        <a href="../dashboard/client.php" class="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider bg-stone-900 text-stone-50 hover:bg-black hover:shadow-md rounded-xl transition-all duration-200 active:scale-95">
+            <i data-lucide="users" class="w-3.5 h-3.5"></i> Painel Clientes
+        </a>
+    <?php endif; ?>
+
+    <a href="../auth/logout.php" class="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 active:scale-95">
+        <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sair
+    </a>
+</div>
 </nav>

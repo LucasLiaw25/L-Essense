@@ -25,18 +25,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'update' && $id > 0) {
         if (!empty($password)) {
             $hash = password_hash($password, PASSWORD_DEFAULT);
-            $sql = "UPDATE usuarios SET nome = ?, email = ?, senha = ? WHERE id = ? AND perfil = 'cliente'";
+            $sql = "UPDATE usuarios SET nome = ?, email = ?, senha = ? WHERE id = ?";
             $stmt = mysqli_prepare($conexao, $sql);
             mysqli_stmt_bind_param($stmt, "sssi", $name, $email, $hash, $id);
         } else {
-            $sql = "UPDATE usuarios SET nome = ?, email = ? WHERE id = ? AND perfil = 'cliente'";
+            $sql = "UPDATE usuarios SET nome = ?, email = ? WHERE id = ?";
             $stmt = mysqli_prepare($conexao, $sql);
             mysqli_stmt_bind_param($stmt, "ssi", $name, $email, $id);
         }
-        if (mysqli_stmt_execute($stmt)) $message = "Dados atualizados!";
+        if (mysqli_stmt_execute($stmt)) $message = "Cliente atualizado!";
         mysqli_stmt_close($stmt);
     } elseif ($action === 'delete' && $id > 0) {
-        $sql = "DELETE FROM usuarios WHERE id = ? AND perfil = 'cliente'";
+        $sql = "DELETE FROM usuarios WHERE id = ?";
         $stmt = mysqli_prepare($conexao, $sql);
         mysqli_stmt_bind_param($stmt, "i", $id);
         if (mysqli_stmt_execute($stmt)) $message = "Cliente removido!";
@@ -44,88 +44,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$sql = "SELECT id, nome, email FROM usuarios WHERE perfil = 'cliente' ORDER BY id DESC";
+$sql = "SELECT id, nome, email FROM usuarios WHERE perfil = 'cliente' ORDER BY nome ASC";
 $res = mysqli_query($conexao, $sql);
-$clients = mysqli_fetch_all($res, MYSQLI_ASSOC);
+$clientes = mysqli_fetch_all($res, MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Clientes - L-Essense</title>
+    <title>Painel Clientes - L-Essense</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>body { font-family: 'Inter', sans-serif; } .font-serif { font-family: 'Instrument Serif', serif; }</style>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-serif { font-family: 'Instrument Serif', serif; }
+    </style>
 </head>
-<body class="bg-stone-50 text-stone-900 min-h-screen p-4 md:p-8">
+<body class="bg-stone-50 text-stone-800 p-4 md:p-8 min-h-screen">
     <div class="max-w-6xl mx-auto">
         <?php include '../user/menu.php'; ?>
 
-        <div class="mb-8 border-b border-stone-200 pb-3">
-            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 block mb-1">Módulo Administrativo</span>
-            <h1 class="font-serif text-4xl italic text-stone-950">Controle de Clientes</h1>
-        </div>
-
         <?php if (!empty($message)): ?>
-            <div class="p-4 bg-stone-900 text-white text-xs font-bold rounded-2xl mb-6 shadow-md">
-                <?php echo htmlspecialchars($message); ?>
+            <div class="mb-6 p-4 bg-stone-900 text-stone-100 rounded-2xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 shadow-md">
+                <i data-lucide="info" class="w-4 h-4 text-stone-400"></i> <?php echo $message; ?>
             </div>
         <?php endif; ?>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm h-fit">
-                <h2 id="formTitle" class="text-xs font-black uppercase tracking-widest text-stone-400 border-b pb-3 mb-4">Novo Registro</h2>
+            <div class="bg-white border border-stone-200/80 rounded-3xl p-6 shadow-sm h-fit">
+                <h2 id="formTitle" class="font-serif text-2xl text-stone-900 mb-6">Novo Registro</h2>
+                
                 <form id="clientForm" action="" method="POST" class="space-y-4">
                     <input type="hidden" name="action" id="formAction" value="create">
                     <input type="hidden" name="id" id="clientId" value="">
-
+                    
                     <div>
-                        <label class="block text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2">Nome do Cliente</label>
-                        <input type="text" name="name" id="cName" required class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 text-sm font-medium rounded-xl outline-none focus:border-stone-400 transition-all">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-stone-400 ml-1 mb-1 block">Nome Completo</label>
+                        <input type="text" name="name" id="cName" required 
+                               class="w-full h-11 px-4 bg-stone-50 border border-stone-200/60 focus:border-stone-400 focus:bg-white rounded-xl text-sm font-medium outline-none transition-all">
                     </div>
+                    
                     <div>
-                        <label class="block text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2">E-mail</label>
-                        <input type="email" name="email" id="cEmail" required class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 text-sm font-medium rounded-xl outline-none focus:border-stone-400 transition-all">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-stone-400 ml-1 mb-1 block">E-mail Corporativo</label>
+                        <input type="email" name="email" id="cEmail" required 
+                               class="w-full h-11 px-4 bg-stone-50 border border-stone-200/60 focus:border-stone-400 focus:bg-white rounded-xl text-sm font-medium outline-none transition-all">
                     </div>
+                    
                     <div>
-                        <label class="block text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2">Senha <span id="pwdLabel" class="text-[9px] text-stone-400 lowercase italic">(obrigatório para novos)</span></label>
-                        <input type="password" name="password" id="cPassword" class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 text-sm font-medium rounded-xl outline-none focus:border-stone-400 transition-all">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-stone-400 ml-1 mb-1 block">
+                            Senha de Acesso <span id="pwdLabel" class="text-[9px] lowercase text-stone-400">(obrigatório para novos)</span>
+                        </label>
+                        <input type="password" name="password" id="cPassword" 
+                               class="w-full h-11 px-4 bg-stone-50 border border-stone-200/60 focus:border-stone-400 focus:bg-white rounded-xl text-sm font-medium outline-none transition-all">
                     </div>
-
-                    <button type="submit" class="w-full py-3 bg-stone-900 text-white font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-black transition-all">
-                        Salvar Cliente
-                    </button>
-                    <button type="button" id="btnCancel" onclick="resetForm()" class="w-full py-2 bg-stone-100 text-stone-600 font-black uppercase tracking-widest text-[9px] rounded-xl hover:bg-stone-200 transition-all hidden">
-                        Cancelar Edição
-                    </button>
+                    
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" class="flex-1 h-11 bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-black transition-all active:scale-95 shadow-sm">
+                            Salvar Registro
+                        </button>
+                        <button type="button" id="btnCancel" onclick="resetForm()" class="hidden h-11 px-4 border border-stone-200 text-stone-500 rounded-xl hover:bg-stone-50 transition-all text-xs font-bold active:scale-95">
+                            Cancelar
+                        </button>
+                    </div>
                 </form>
             </div>
 
-            <div class="lg:col-span-2 bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
+            <div class="lg:col-span-2 bg-white border border-stone-200/80 rounded-3xl overflow-hidden shadow-sm">
+                <div class="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50/50">
+                    <h2 class="font-serif text-2xl text-stone-900">Base de Clientes</h2>
+                    <span class="text-[10px] font-black bg-stone-200 text-stone-700 px-2.5 py-1 rounded-full uppercase tracking-wider"><?php echo count($clientes); ?> Ativos</span>
+                </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs">
+                    <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-stone-50 text-stone-400 border-b border-stone-100 font-black uppercase tracking-wider text-[9px]">
-                                <th class="p-4">ID</th>
-                                <th class="p-4">Nome</th>
-                                <th class="p-4">E-mail</th>
-                                <th class="p-4 text-right">Ações</th>
+                            <tr class="border-b border-stone-100 text-[10px] font-black uppercase tracking-widest text-stone-400 bg-stone-50/30">
+                                <th class="py-4 px-6">ID</th>
+                                <th class="py-4 px-6">Nome</th>
+                                <th class="py-4 px-6">E-mail</th>
+                                <th class="py-4 px-6 text-right">Ações</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-stone-100 font-medium text-stone-700">
-                            <?php foreach ($clients as $c): ?>
-                                <tr class="hover:bg-stone-50/60 transition-all">
-                                    <td class="p-4 font-mono text-stone-400">#<?php echo $c['id']; ?></td>
-                                    <td class="p-4 font-bold text-stone-900"><?php echo htmlspecialchars($c['nome']); ?></td>
-                                    <td class="p-4 text-stone-500"><?php echo htmlspecialchars($c['email']); ?></td>
-                                    <td class="p-4 text-right space-x-1">
-                                        <button onclick="editClient(<?php echo htmlspecialchars(json_encode($c)); ?>)" class="p-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-all"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
-                                        <form action="" method="POST" class="inline">
+                        <tbody class="divide-y divide-stone-100 text-sm font-medium text-stone-700">
+                            <?php foreach ($clientes as $c): ?>
+                                <tr class="hover:bg-stone-50/60 transition-colors duration-200">
+                                    <td class="py-4 px-6 font-mono text-xs text-stone-400">#<?php echo $c['id']; ?></td>
+                                    <td class="py-4 px-6 text-stone-900 font-semibold"><?php echo htmlspecialchars($c['nome']); ?></td>
+                                    <td class="py-4 px-6 text-stone-500"><?php echo htmlspecialchars($c['email']); ?></td>
+                                    <td class="py-4 px-6 text-right flex justify-end gap-1.5">
+                                        <button onclick='editClient(<?php echo json_encode($c, JSON_HEX_APOS|JSON_HEX_QUOT); ?>)' class="h-8 w-8 rounded-lg border border-stone-200 flex items-center justify-center text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all duration-200 active:scale-90">
+                                            <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                        <form action="" method="POST" onsubmit="return confirm('Excluir cliente?');" class="inline">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="id" value="<?php echo $c['id']; ?>">
-                                            <button type="submit" onclick="return confirm('Deseja banir/deletar este cliente?')" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all"><i data-lucide="user-x" class="w-3.5 h-3.5"></i></button>
+                                            <button type="submit" class="h-8 w-8 rounded-lg border border-stone-200 flex items-center justify-center text-stone-400 hover:text-white hover:bg-red-600 hover:border-red-600 transition-all duration-200 active:scale-90">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                            </button>
                                         </form>
                                     </td>
                                 </tr>
@@ -136,8 +153,10 @@ $clients = mysqli_fetch_all($res, MYSQLI_ASSOC);
             </div>
         </div>
     </div>
+    
     <script>
         lucide.createIcons();
+
         function editClient(client) {
             document.getElementById('formAction').value = 'update';
             document.getElementById('clientId').value = client.id;
@@ -147,6 +166,7 @@ $clients = mysqli_fetch_all($res, MYSQLI_ASSOC);
             document.getElementById('pwdLabel').innerText = '(deixe em branco para não alterar)';
             document.getElementById('btnCancel').classList.remove('hidden');
         }
+
         function resetForm() {
             document.getElementById('clientForm').reset();
             document.getElementById('formAction').value = 'create';

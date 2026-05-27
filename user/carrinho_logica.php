@@ -1,15 +1,58 @@
 <?php
-// dashboard/carrinho_logica.php
+// user/carrinho_logica.php
 declare(strict_types=1);
 
 require_once __DIR__ . '/../auth/VerificarLogin.php';
-require_once __DIR__ . '/../auth/Conexao.php'; 
 
-if (!isset($_SESSION['carrinho'])) {
-    $_SESSION['carrinho'] = [];
+global $conexao;
+
+// CONFIGURAÇÃO: Tempo em segundos para o pedido sumir do carrinho por inatividade (Ex: 7200 segundos = 2 horas)
+define('CARRINHO_EXPIRACAO', 7200); 
+
+/**
+ * Função para obter o carrinho salvo no Cookie
+ */
+function obterCarrinho(): array {
+    if (isset($_COOKIE['carrinho_lessence'])) {
+        $dados = json_decode($_COOKIE['carrinho_lessence'], true);
+        if (is_array($dados)) {
+            // Verifica se o tempo limite de inatividade expirou
+            if (isset($dados['expira_em']) && time() > $dados['expira_em']) {
+                limparCarrinhoCookie();
+                return [];
+            }
+            return $dados['itens'] ?? [];
+        }
+    }
+    return [];
 }
 
-// Adicionar Item
+/**
+ * Função para salvar o estado atual do carrinho no Cookie
+ */
+function salvarCarrinhoCookie(array $itens): void {
+    $dadosParaSalvar = [
+        'expira_em' => time() + CARRINHO_EXPIRACAO, // Define/renova o tempo para sumir
+        'itens' => $itens
+    ];
+    // Salva o cookie válido por 30 dias no navegador, mas a lógica interna valida a inatividade
+    setcookie('carrinho_lessence', json_encode($dadosParaSalvar), time() + (86400 * 30), "/");
+}
+
+/**
+ * Função para destruir o Cookie do carrinho
+ */
+function limparCarrinhoCookie(): void {
+    setcookie('carrinho_lessence', '', time() - 3600, "/");
+    if (isset($_COOKIE['carrinho_lessence'])) {
+        unset($_COOKIE['carrinho_lessence']);
+    }
+}
+
+// Carrega os itens do carrinho vindo do Cookie
+$carrinho_itens = obterCarrinho();
+
+// --- LÓGICA DE ADICIONAR ITEM ---
 if (isset($_GET['adicionar'])) {
     $id = (int)$_GET['adicionar'];
     
@@ -22,83 +65,64 @@ if (isset($_GET['adicionar'])) {
 
     if ($produto) {
         $estoqueDisponivel = (int)$produto['estoque'];
-        $quantidadeNoCarrinho = isset($_SESSION['carrinho'][$id]) ? $_SESSION['carrinho'][$id]['quantidade'] : 0;
+        $quantidadeNoCarrinho = isset($carrinho_itens[$id]) ? $carrinho_itens[$id]['quantidade'] : 0;
 
         if ($quantidadeNoCarrinho < $estoqueDisponivel) {
-            if (isset($_SESSION['carrinho'][$id])) {
-                $_SESSION['carrinho'][$id]['quantidade']++;
+            if (isset($carrinho_itens[$id])) {
+                $carrinho_itens[$id]['quantidade']++;
             } else {
-                $_SESSION['carrinho'][$id] = [
+                $carrinho_itens[$id] = [
                     'nome' => $produto['nome'],
                     'preco' => (float)$produto['preco'],
                     'quantidade' => 1
                 ];
             }
-            header("Location: ../user/home.php?sucesso=adicionado");
-        } else {
-            header("Location: ../user/home.php?erro=estoque_insuficiente");
+            salvarCarrinhoCookie($carrinho_itens); // Grava a alteração e renova o tempo
         }
     }
+    mysqli_stmt_close($stmt_prod);
+    header("Location: home.php");
     exit();
 }
 
-// Remover Item
+// --- LÓGICA DE REMOVER ITEM ---
 if (isset($_GET['remover'])) {
     $id = (int)$_GET['remover'];
-    if (isset($_SESSION['carrinho'][$id])) {
-        $_SESSION['carrinho'][$id]['quantidade']--;
-        if ($_SESSION['carrinho'][$id]['quantidade'] <= 0) {
-            unset($_SESSION['carrinho'][$id]);
+    
+    if (isset($carrinho_itens[$id])) {
+        if ($carrinho_itens[$id]['quantidade'] > 1) {
+            $carrinho_itens[$id]['quantidade']--;
+        } else {
+            unset($carrinho_itens[$id]);
         }
+        salvarCarrinhoCookie($carrinho_itens); // Grava a alteração e renova o tempo
     }
-    header("Location: ../user/home.php");
+    header("Location: home.php");
     exit();
 }
 
-// Finalizar Pedido Real no Banco de Dados
+// --- LÓGICA DE FINALIZAR PEDIDO ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finalizar_pedido'])) {
-    if (empty($_SESSION['carrinho'])) {
-        header("Location: ../user/home.php?erro=carrinho_vazio");
+    if (empty($carrinho_itens)) {
+        header("Location: home.php?erro=carrinho_vazio");
         exit();
     }
 
-    $usuario_id = $_SESSION['usuario_id'] ?? null;
-    $usuario_nome = $_SESSION['usuario'] ?? null;
-    $total_pedido = (float)($_POST['total_pedido'] ?? 0);
-
-    if (!$usuario_id) {
-        header("Location: ../user/login.php?erro=sessao_expirada");
-        exit();
-    }
+    $usuario_id = $_SESSION['usuario_id'] ?? 1;
+    $usuario_nome = $_SESSION['usuario'] ?? 'Cliente';
+    $total_pedido = (float)$_POST['total_pedido'];
 
     mysqli_begin_transaction($conexao);
 
     try {
-        // Valida estoque preventivamente
-        foreach ($_SESSION['carrinho'] as $id_prod => $item) {
-            $sql_check = "SELECT estoque FROM produtos WHERE id = ?";
-            $stmt_check = mysqli_prepare($conexao, $sql_check);
-            mysqli_stmt_bind_param($stmt_check, "i", $id_prod);
-            mysqli_stmt_execute($stmt_check);
-            $res_check = mysqli_stmt_get_result($stmt_check);
-            $prod_check = mysqli_fetch_assoc($res_check);
-            mysqli_stmt_close($stmt_check);
-
-            if (!$prod_check || (int)$item['quantidade'] > (int)$prod_check['estoque']) {
-                throw new Exception("Estoque insuficiente.");
-            }
-        }
-
-        // Insere Pedido Pai
-        $sql_pedido = "INSERT INTO pedidos (usuario_id, usuario_nome, total, status) VALUES (?, ?, ?, 'Pendente')";
-        $stmt_ped = mysqli_prepare($conexao, $sql_pedido);
+        $sql_ped = "INSERT INTO pedidos (usuario_id, usuario_nome, total, status) VALUES (?, ?, ?, 'Pendente')";
+        $stmt_ped = mysqli_prepare($conexao, $sql_ped);
         mysqli_stmt_bind_param($stmt_ped, "isd", $usuario_id, $usuario_nome, $total_pedido);
         mysqli_stmt_execute($stmt_ped);
         $pedido_id = mysqli_insert_id($conexao);
         mysqli_stmt_close($stmt_ped);
 
-        // Insere Itens Filhos e abate o estoque
-        foreach ($_SESSION['carrinho'] as $id_prod => $item) {
+        foreach ($carrinho_itens as $id_prod => $item) {
             $sql_item = "INSERT INTO pedido_itens (pedido_id, produto_id, nome, preco, quantidade) VALUES (?, ?, ?, ?, ?)";
             $stmt_item = mysqli_prepare($conexao, $sql_item);
             mysqli_stmt_bind_param($stmt_item, "iisdi", $pedido_id, $id_prod, $item['nome'], $item['preco'], $item['quantidade']);
@@ -113,14 +137,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finalizar_pedido'])) 
         }
 
         mysqli_commit($conexao);
-        $_SESSION['carrinho'] = [];
-        header("Location: ../user/home.php?sucesso=pedido_realizado");
-        exit();
+        
+        // Pedido feito com sucesso, remove o carrinho dos Cookies
+        limparCarrinhoCookie();
 
+        header("Location: ../dashboard/status.php?sucesso=1");
+        exit();
     } catch (Exception $e) {
         mysqli_rollback($conexao);
-        header("Location: ../user/home.php?erro=falha_salvar_pedido");
+        header("Location: home.php?erro=falha_pedido");
         exit();
     }
 }
-?>

@@ -86,7 +86,7 @@ $produtos = mysqli_fetch_all($resultado, MYSQLI_ASSOC);
                                 </div>
                                 <div class="flex items-center justify-between pt-2 border-t border-stone-100 mt-auto">
                                     <span class="font-serif font-bold text-lg text-stone-950">R$ <?php echo number_format((float)$prod['preco'], 2, ',', '.'); ?></span>
-                                    <a href="carrinho_logica.php?adicionar=<?php echo $prod['id']; ?>" class="p-2.5 text-white rounded-xl transition-all shadow-sm active:scale-95 <?php echo $isPromocao ? 'bg-amber-500 hover:bg-amber-600' : 'bg-stone-900 hover:bg-black'; ?>">
+                                    <a href="carrinho_logica.php?adicionar=<?php echo $prod['id']; ?>" class="p-2.5 text-white rounded-xl transition-all shadow-sm active:scale-95 <?php echo $isPromocao ? 'bg-amber-500 hover:bg-amber-600' : 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/10'; ?>">
                                         <i data-lucide="shopping-bag" class="w-4 h-4"></i>
                                     </a>
                                 </div>

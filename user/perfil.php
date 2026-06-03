@@ -74,13 +74,27 @@ mysqli_stmt_close($stmt_user);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Perfil - L-Essense</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="../css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet\">\
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>body { font-family: 'Inter', sans-serif; } .font-serif { font-family: 'Instrument Serif', serif; }</style>
+    <title>Meu Perfil</title>
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    <script src="https://cdn.tailwindcss.com\"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest\"></script>
 </head>
+<body class="bg-stone-50 text-stone-900 antialiased font-sans">
+    <style>
+
+        body { 
+    font-family: 'Inter', sans-serif; 
+}
+.font-serif { 
+    font-family: 'Instrument Serif', serif; 
+}
+
+    </style>
 <body class="bg-stone-50 min-h-screen text-stone-900 antialiased pb-12">
 
     <div class="max-w-6xl mx-auto px-4 pt-6">

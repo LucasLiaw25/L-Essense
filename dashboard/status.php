@@ -37,14 +37,27 @@ mysqli_stmt_close($stmt_p);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Status dos Pedidos - L-Essense</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Status - L-Essense</title>
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    <script src="https://cdn.tailwindcss.com\"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script src="https://unpkg.com/lucide@latest\"></script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .font-serif { font-family: 'Instrument Serif', serif; }
+        body { 
+    font-family: 'Inter', sans-serif; 
+}
+.font-serif { 
+    font-family: 'Instrument Serif', serif; 
+}
+
     </style>
+</head>
+<body class="bg-stone-50 text-stone-900 antialiased font-sans">
 </head>
 <body class="bg-stone-50 text-stone-800 p-4 md:p-8 min-h-screen">
     <div class="max-w-4xl mx-auto">

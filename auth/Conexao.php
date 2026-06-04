@@ -11,7 +11,7 @@ $usuario  = "root";
 $senha    = "";
 $dbname   = "lessence";
 
-$conexao = mysqli_connect($servidor, $usuario, $senha, $dbname, 3309);
+$conexao = mysqli_connect($servidor, $usuario, $senha, $dbname);
 
 if (!$conexao) {
     die("A conexão com o banco de dados falhou: " . mysqli_connect_error());

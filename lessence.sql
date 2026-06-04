@@ -2,8 +2,8 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1:3309
--- Tempo de geração: 03/06/2026 às 15:16
+-- Host: 127.0.0.1
+-- Tempo de geração: 04/06/2026 às 05:15
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -41,9 +41,13 @@ CREATE TABLE `pedidos` (
 --
 
 INSERT INTO `pedidos` (`id`, `usuario_id`, `usuario_nome`, `total`, `status`, `criado_em`) VALUES
-(5, 1, 'admin', 75.00, 'Pendente', '2026-05-27 00:13:11'),
+(5, 1, 'admin', 75.00, '', '2026-05-27 00:13:11'),
 (6, 1, 'admin', 25.50, 'Concluído', '2026-06-03 12:39:31'),
-(7, 3, 'Lorenzo', 25.50, 'Concluído', '2026-06-03 12:45:15');
+(8, 1, 'admin', 46.99, 'Pendente', '2026-06-04 02:38:49'),
+(9, 1, 'admin', 46.99, 'Pendente', '2026-06-04 02:41:51'),
+(10, 1, 'admin', 76.50, 'Concluído', '2026-06-04 02:44:59'),
+(11, 5, 'Betty Noire', 93.98, 'Pendente', '2026-06-04 02:54:56'),
+(12, 6, 'Enzo', 46.99, 'Concluído', '2026-06-04 03:14:04');
 
 -- --------------------------------------------------------
 
@@ -66,7 +70,12 @@ CREATE TABLE `pedido_itens` (
 
 INSERT INTO `pedido_itens` (`id`, `pedido_id`, `produto_id`, `nome`, `preco`, `quantidade`) VALUES
 (2, 6, 3, 'Macarrão', 25.50, 1),
-(3, 7, 3, 'Macarrão', 25.50, 1);
+(4, 8, 6, 'Feijoada', 46.99, 1),
+(5, 9, 6, 'Feijoada', 46.99, 1),
+(6, 10, 3, 'Macarrão', 25.50, 2),
+(7, 10, 5, 'Frango Grelhado', 25.50, 1),
+(8, 11, 6, 'Feijoada', 46.99, 2),
+(9, 12, 6, 'Feijoada', 46.99, 1);
 
 -- --------------------------------------------------------
 
@@ -89,11 +98,10 @@ CREATE TABLE `produtos` (
 --
 
 INSERT INTO `produtos` (`id`, `nome`, `descricao`, `preco`, `estoque`, `fixado`, `imagem`) VALUES
-(3, 'Macarrão', 'Macarrão gostoso', 25.50, 8, 0, '39b1ffe2629fe849eeb0efc3ad635966.jpg'),
-(4, 'Lamen do Liaw', 'Lamen referente ao Liaw', 42.99, 5, 0, 'b80c9d7b9ee625768947d780936339a3.jpg'),
-(5, 'Frango Grelhado', 'Franguinho grelhado por que o Lorenzo gosta', 25.50, 10, 0, '6de68ec14046de78c89e218fca61876f.jpg'),
-(6, 'Feijoada', 'A feijoada é o prato mais emblemático da culinária brasileira', 46.99, 4, 1, '2a810530d3db49849c2ae0143703cd17.jpg'),
-(7, 'teste', 'teste', 67.00, 67, 0, NULL);
+(3, 'Macarrão', 'Macarrão gostoso', 25.50, 6, 0, '39b1ffe2629fe849eeb0efc3ad635966.jpg'),
+(4, 'Lamen do Liaw', 'Lamen referente ao Liaw', 42.99, 5, 1, 'b80c9d7b9ee625768947d780936339a3.jpg'),
+(5, 'Frango Grelhado', 'Franguinho grelhado por que o Lorenzo gosta', 25.50, 9, 0, '6de68ec14046de78c89e218fca61876f.jpg'),
+(6, 'Feijoada', 'A feijoada é o prato mais emblemático da culinária brasileira', 46.99, 2, 0, '2a810530d3db49849c2ae0143703cd17.jpg');
 
 -- --------------------------------------------------------
 
@@ -115,8 +123,9 @@ CREATE TABLE `usuarios` (
 
 INSERT INTO `usuarios` (`id`, `nome`, `email`, `senha`, `perfil`) VALUES
 (1, 'admin', 'admin@sistema.com', 'admin123', 'admin'),
-(3, 'Lorenzo', 'lorenzocostadasilva01@gmail.com', '$2y$10$XdHoZ6UtsaT6hMWIv883zePYGeiUF0/G4wqVItpbRdnBDGgtQ20se', 'cliente'),
-(4, 'anthoni', 'noire649@gmail.com', '$2y$10$XImOsEq9FC.yqDzpenLPh.ed4UYxM2N/TOPoJolYTkmsw1eZ2RDFm', 'cliente');
+(4, 'Anthoni', 'noire649@gmail.com', '$2y$10$XImOsEq9FC.yqDzpenLPh.ed4UYxM2N/TOPoJolYTkmsw1eZ2RDFm', 'cliente'),
+(5, 'Betty Noire', 'noireb649@gmail.com', '$2y$10$sCZUXLgkXbyFZR8c69FywOKWuVtSiqAbG0UErLLWsLXp7z/q0Q2QC', 'cliente'),
+(6, 'Enzo', 'Enzo@gmil.com', '$2y$10$Dsl/HLG.NJp4ptXbCQFiCeef98NI.cS6Bh16KRk5ZLKRRM3GVcvam', 'cliente');
 
 --
 -- Índices para tabelas despejadas
@@ -158,13 +167,13 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de tabela `pedidos`
 --
 ALTER TABLE `pedidos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de tabela `pedido_itens`
 --
 ALTER TABLE `pedido_itens`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de tabela `produtos`
@@ -176,7 +185,7 @@ ALTER TABLE `produtos`
 -- AUTO_INCREMENT de tabela `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Restrições para tabelas despejadas

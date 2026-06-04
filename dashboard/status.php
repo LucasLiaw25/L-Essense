@@ -1,197 +1,206 @@
 <?php
-// dashboard/client.php
-declare(strict_types=1);
+// dashboard/status.php
+require_once __DIR__ . '/../auth/VerificarLogin.php';
+require_once __DIR__ . '/../auth/Conexao.php';
 
-require_once __DIR__ . '/../auth/Conexao.php'; 
-require_once __DIR__ . '/../auth/ClientClass.php';
-require_once __DIR__ . '/../auth/verificarADM.php';
+global $conexao;
 
-$message = "";
+$mensagem = "";
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? 'create';
-    $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-    $name = trim($_POST['name'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
+// Lógica para alterar o status (Apenas Administrador)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alterar_status'])) {
+    if (isset($_SESSION['perfil']) && $_SESSION['perfil'] === 'admin') {
+        $pedido_id = (int)($_POST['pedido_id'] ?? 0);
+        $novo_status = trim($_POST['novo_status'] ?? '');
+        $status_validos = ['Pendente', 'Concluído', 'Cancelado'];
 
-    if ($action === 'create' && !empty($name) && !empty($email)) {
-        $hash = password_hash($password, PASSWORD_DEFAULT);
-        $sql = "INSERT INTO usuarios (nome, email, senha, perfil) VALUES (?, ?, ?, 'cliente')";
-        $stmt = mysqli_prepare($conexao, $sql);
-        mysqli_stmt_bind_param($stmt, "sss", $name, $email, $hash);
-        if (mysqli_stmt_execute($stmt)) $message = "Cliente cadastrado!";
-        mysqli_stmt_close($stmt);
-    } elseif ($action === 'update' && $id > 0) {
-        if (!empty($password)) {
-            $hash = password_hash($password, PASSWORD_DEFAULT);
-            $sql = "UPDATE usuarios SET nome = ?, email = ?, senha = ? WHERE id = ?";
-            $stmt = mysqli_prepare($conexao, $sql);
-            mysqli_stmt_bind_param($stmt, "sssi", $name, $email, $hash, $id);
+        if ($pedido_id > 0 && in_array($novo_status, $status_validos, true)) {
+            $sql_update = "UPDATE pedidos SET status = ? WHERE id = ?";
+            $stmt = mysqli_prepare($conexao, $sql_update);
+
+            if ($stmt) {
+                mysqli_stmt_bind_param($stmt, "si", $novo_status, $pedido_id);
+                if (mysqli_stmt_execute($stmt)) {
+                    $mensagem = "Status do pedido #$pedido_id alterado para $novo_status!";
+                } else {
+                    $mensagem = "Falha ao atualizar o status do pedido. Tente novamente.";
+                }
+                mysqli_stmt_close($stmt);
+            } else {
+                $mensagem = "Erro interno ao preparar a atualização do pedido.";
+            }
         } else {
-            $sql = "UPDATE usuarios SET nome = ?, email = ? WHERE id = ?";
-            $stmt = mysqli_prepare($conexao, $sql);
-            mysqli_stmt_bind_param($stmt, "ssi", $name, $email, $id);
+            $mensagem = "Dados inválidos para alteração de status.";
         }
-        if (mysqli_stmt_execute($stmt)) $message = "Dados do cliente atualizados!";
-        mysqli_stmt_close($stmt);
-    } elseif ($action === 'delete' && $id > 0) {
-        $sql = "DELETE FROM usuarios WHERE id = ? AND perfil = 'cliente'";
-        $stmt = mysqli_prepare($conexao, $sql);
-        mysqli_stmt_bind_param($stmt, "i", $id);
-        if (mysqli_stmt_execute($stmt)) $message = "Cliente removido do sistema!";
-        mysqli_stmt_close($stmt);
+    } else {
+        $mensagem = "Operação não autorizada.";
     }
-    header("Location: client.php?msg=" . urlencode($message));
-    exit();
 }
 
-$msgGet = $_GET['msg'] ?? '';
-$sql = "SELECT id, nome, email FROM usuarios WHERE perfil = 'cliente' ORDER BY nome ASC";
-$resultado = mysqli_query($conexao, $sql);
-$clients = mysqli_fetch_all($resultado, MYSQLI_ASSOC);
+// Busca os pedidos baseado no nível de acesso
+if ($_SESSION['perfil'] === 'admin') {
+    $sql_pedidos = "SELECT * FROM pedidos ORDER BY criado_em DESC";
+    $stmt_p = mysqli_prepare($conexao, $sql_pedidos);
+} else {
+    $sql_pedidos = "SELECT * FROM pedidos WHERE usuario_id = ? ORDER BY criado_em DESC";
+    $stmt_p = mysqli_prepare($conexao, $sql_pedidos);
+    mysqli_stmt_bind_param($stmt_p, "i", $_SESSION['usuario_id']);
+}
+
+mysqli_stmt_execute($stmt_p);
+$resultado_p = mysqli_stmt_get_result($stmt_p);
+$pedidos = mysqli_fetch_all($resultado_p, MYSQLI_ASSOC);
+mysqli_stmt_close($stmt_p);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Clientes | L-Essense</title>
+    <title>Status dos Pedidos | L-Essense</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
+        .font-serif { font-family: 'Instrument Serif', serif; }
     </style>
 </head>
 <body class="bg-stone-50 text-stone-900 antialiased min-h-screen p-4 md:p-8">
 
-    <div class="max-w-7xl mx-auto space-y-8">
+    <div class="max-w-5xl mx-auto space-y-8">
         <?php include __DIR__ . '/../user/menu.php'; ?>
 
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-stone-200 pb-6">
             <div>
-                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 block mb-1">Módulo de Controle</span>
-                <h1 class="text-3xl font-bold tracking-tight text-stone-950">Base de Clientes</h1>
+                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 block mb-1">Acompanhamento</span>
+                <h1 class="text-3xl font-bold tracking-tight text-stone-950">Histórico de Pedidos</h1>
             </div>
-            <?php if (!empty($msgGet)): ?>
-                <div class="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm">
-                    <i data-lucide="info" class="w-4 h-4 text-amber-600"></i>
-                    <span><?php echo htmlspecialchars($msgGet); ?></span>
+            
+            <?php if (!empty($mensagem)): ?>
+                <div class="px-4 py-3 rounded-xl text-xs font-semibold bg-stone-900 text-white flex items-center gap-2 shadow-sm border border-stone-800 transition-all">
+                    <i data-lucide="info" class="w-4 h-4 text-amber-400"></i>
+                    <span><?php echo htmlspecialchars($mensagem); ?></span>
                 </div>
             <?php endif; ?>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            
-            <div class="bg-white border border-stone-200/80 rounded-2xl p-6 shadow-sm sticky top-24">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 id="formTitle" class="text-base font-bold tracking-tight text-stone-950">Novo Registro</h2>
-                    <button id="btnCancel" onclick="resetForm()" class="hidden text-[10px] font-black uppercase tracking-wider text-stone-400 hover:text-red-500 transition-all">Cancelar</button>
+        <?php if (empty($pedidos)): ?>
+            <div class="bg-white border border-stone-200/60 rounded-2xl p-12 text-center max-w-xl mx-auto shadow-sm">
+                <div class="w-12 h-12 bg-stone-50 rounded-xl flex items-center justify-center mx-auto mb-4 border border-stone-100">
+                    <i data-lucide="shopping-bag" class="w-5 h-5 text-stone-400"></i>
                 </div>
-
-                <form id="clientForm" action="client.php" method="POST" class="space-y-4">
-                    <input type="hidden" name="action" id="formAction" value="create">
-                    <input type="hidden" name="id" id="clientId" value="">
-
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-stone-400 ml-1 block">Nome Completo</label>
-                        <input type="text" name="name" id="cName" required placeholder="Ex: Gabriel Silva"
-                            class="w-full px-4 py-3 bg-stone-50 border border-stone-200 focus:border-amber-500 focus:bg-white rounded-xl transition-all text-sm font-medium outline-none">
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-stone-400 ml-1 block">E-mail Corporativo / Pessoal</label>
-                        <input type="email" name="email" id="cEmail" required placeholder="exemplo@email.com"
-                            class="w-full px-4 py-3 bg-stone-50 border border-stone-200 focus:border-amber-500 focus:bg-white rounded-xl transition-all text-sm font-medium outline-none">
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-stone-400 ml-1 block">
-                            Senha de Acesso <span id="pwdLabel" class="text-[9px] text-stone-400 lowercase font-semibold tracking-normal">(obrigatório para novos)</span>
-                        </label>
-                        <input type="password" name="password" id="cPassword" placeholder="••••••••"
-                            class="w-full px-4 py-3 bg-stone-50 border border-stone-200 focus:border-amber-500 focus:bg-white rounded-xl transition-all text-sm font-medium outline-none">
-                    </div>
-
-                    <button type="submit"
-                        class="w-full bg-amber-600 hover:bg-amber-700 text-white font-black uppercase tracking-[0.15em] text-[10px] py-4 rounded-xl transition-all shadow-md shadow-amber-600/10 flex items-center justify-center gap-2 mt-2">
-                        <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> Salvar Registro
-                    </button>
-                </form>
+                <h3 class="text-sm font-bold text-stone-950 mb-1">Nenhum pedido localizado</h3>
+                <p class="text-xs text-stone-400 leading-relaxed">Você ainda não realizou solicitações ou não há registros no sistema.</p>
+                <a href="../user/home.php" class="inline-flex mt-5 bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest px-6 py-3 rounded-xl hover:bg-black transition-all">
+                    Ir para o Menu
+                </a>
             </div>
+        <?php else: ?>
+            <div class="space-y-6">
+                <?php foreach ($pedidos as $p): ?>
+                    <div class="bg-white border border-stone-200/80 rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row justify-between items-stretch">
+                        
+                        <div class="p-6 flex-1 space-y-4">
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-stone-100 pb-3">
+                                <span class="font-mono text-xs text-stone-400 font-bold">#<?php echo $p['id']; ?></span>
+                                <span class="text-xs text-stone-400 font-medium">
+                                    <?php echo date('d/m/Y H:i', strtotime($p['criado_em'])); ?>
+                                </span>
+                                <span class="text-xs text-stone-400 font-bold">| Cliente: <?php echo htmlspecialchars($p['usuario_nome']); ?></span>
+                            </div>
 
-            <div class="lg:col-span-2 bg-white border border-stone-200/80 rounded-2xl shadow-sm overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-stone-50/70 border-b border-stone-200 text-[10px] font-black uppercase tracking-widest text-stone-400">
-                                <th class="p-4 pl-6">ID</th>
-                                <th class="p-4">Nome do Cliente</th>
-                                <th class="p-4">Canal de E-mail</th>
-                                <th class="p-4 text-right pr-6">Gerenciar</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-stone-100 text-sm font-medium text-stone-700">
-                            <?php if (empty($clients)): ?>
-                                <tr>
-                                    <td colspan="4" class="p-12 text-center text-xs font-semibold text-stone-400">Nenhum cliente cadastrado em nossa base.</td>
-                                </tr>
-                            <?php endif; ?>
-                            <?php foreach ($clients as $client): ?>
-                                <tr class="hover:bg-stone-50/40 transition-all">
-                                    <td class="p-4 pl-6 font-mono text-xs text-stone-400">#<?php echo $client['id']; ?></td>
-                                    <td class="p-4 font-bold text-stone-950"><?php echo htmlspecialchars($client['nome']); ?></td>
-                                    <td class="p-4 text-stone-500 font-normal"><?php echo htmlspecialchars($client['email']); ?></td>
+                            <div class="space-y-3">
+                                <span class="text-[9px] font-black uppercase tracking-wider text-stone-400 block">Itens Solicitados</span>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <?php
+                                    // SELECT com JOIN para capturar a coluna da imagem original da tabela de produtos
+                                    $sql_itens = "SELECT pi.nome, pi.quantidade, pi.preco, pr.imagem 
+                                                  FROM pedido_itens pi
+                                                  LEFT JOIN produtos pr ON pi.produto_id = pr.id
+                                                  WHERE pi.pedido_id = ?";
+                                    $stmt_i = mysqli_prepare($conexao, $sql_itens);
+                                    mysqli_stmt_bind_param($stmt_i, "i", $p['id']);
+                                    mysqli_stmt_execute($stmt_i);
+                                    $res_itens = mysqli_stmt_get_result($stmt_i);
                                     
-                                    <td class="p-4 text-right pr-6">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <button onclick='editClient(<?php echo json_encode($client, JSON_HEX_APOS|JSON_HEX_QUOT); ?>)' 
-                                                class="h-9 w-9 bg-stone-100 hover:bg-amber-600 hover:text-white rounded-xl flex items-center justify-center text-stone-600 transition-all active:scale-95" title="Editar Ficha">
-                                                <i data-lucide="edit" class="w-4 h-4"></i>
-                                            </button>
+                                    while ($item = mysqli_fetch_assoc($res_itens)):
+                                        // Configura caminho da foto fallback caso o produto tenha sido deletado ou esteja sem imagem
+                                        $foto = (!empty($item['imagem']) && file_exists(__DIR__ . '/../uploads/' . $item['imagem'])) 
+                                                ? '../uploads/' . $item['imagem'] 
+                                                : '../img/default-product.jpg'; // Substitua pelo seu caminho padrão se tiver
+                                    ?>
+                                        <div class="flex items-center gap-3 p-2 bg-stone-50 border border-stone-100 rounded-xl">
+                                            <img src="<?php echo $foto; ?>" alt="<?php echo htmlspecialchars($item['nome']); ?>" 
+                                                 class="w-12 h-12 rounded-lg object-cover bg-stone-200 border border-stone-200/40 shrink-0">
                                             
-                                            <form action="client.php" method="POST" onsubmit="return confirm('Esta ação excluirá permanentemente a conta do cliente. Confirmar?');">
-                                                <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="id" value="<?php echo $client['id']; ?>">
-                                                <button type="submit" class="h-9 w-9 bg-stone-100 hover:bg-red-500 hover:text-white rounded-xl flex items-center justify-center text-stone-500 transition-all active:scale-95" title="Remover Cadastro">
-                                                    <i data-lucide="user-x" class="w-4 h-4"></i>
-                                                </button>
-                                            </form>
+                                            <div class="min-w-0 flex-1">
+                                                <h4 class="text-xs font-bold text-stone-950 truncate"><?php echo htmlspecialchars($item['nome']); ?></h4>
+                                                <p class="text-[10px] text-stone-400 font-medium mt-0.5">
+                                                    Qtd: <span class="text-stone-900 font-bold"><?php echo $item['quantidade']; ?></span> 
+                                                    · R$ <?php echo number_format((float)$item['preco'], 2, ',', '.'); ?>
+                                                </p>
+                                            </div>
                                         </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+                                    <?php 
+                                    endwhile; 
+                                    mysqli_stmt_close($stmt_i);
+                                    ?>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-6 bg-stone-50/50 border-t md:border-t-0 md:border-l border-stone-100 flex flex-col justify-between items-start md:items-end w-full md:w-64 gap-6 shrink-0">
+                            
+                            <div class="md:text-right">
+                                <span class="text-[10px] font-black uppercase text-stone-400 tracking-widest block mb-0.5">Valor Total</span>
+                                <span class="text-2xl font-serif text-stone-950 font-bold">
+                                    R$ <?php echo number_format((float)($p['total'] ?? 0), 2, ',', '.'); ?>
+                                </span>
+                            </div>
+
+                            <div class="flex flex-col items-start md:items-end gap-2 w-full">
+                                <span class="text-[9px] font-black uppercase text-stone-400 tracking-wider">Situação</span>
+                                <?php 
+                                $status = $p['status'] ?? 'Pendente';
+                                if ($status === 'Concluído') {
+                                    echo '<span class="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[10px] font-black uppercase tracking-wider">Concluído</span>';
+                                } elseif ($status === 'Cancelado') {
+                                    echo '<span class="px-3 py-1 bg-red-50 text-red-700 border border-red-200 rounded-full text-[10px] font-black uppercase tracking-wider">Cancelado</span>';
+                                } else {
+                                    echo '<span class="px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-black uppercase tracking-wider animate-pulse">Pendente</span>';
+                                }
+                                ?>
+                            </div>
+
+                            <?php if ($_SESSION['perfil'] === 'admin'): ?>
+                                <form action="status.php" method="POST" class="w-full flex gap-2">
+                                    <input type="hidden" name="pedido_id" value="<?php echo $p['id']; ?>">
+                                    
+                                    <select name="novo_status" class="flex-1 bg-white text-stone-700 rounded-xl px-2.5 h-10 text-[10px] font-black uppercase tracking-widest outline-none border border-stone-200 focus:border-stone-400 transition-all cursor-pointer">
+                                        <option value="Pendente" <?php echo $p['status'] == 'Pendente' ? 'selected' : ''; ?>>Pendente</option>
+                                        <option value="Concluído" <?php echo $p['status'] == 'Concluído' ? 'selected' : ''; ?>>Concluído</option>
+                                        <option value="Cancelado" <?php echo $p['status'] == 'Cancelado' ? 'selected' : ''; ?>>Cancelado</option>
+                                    </select>
+                                    
+                                    <button type="submit" name="alterar_status" class="h-10 bg-stone-900 text-white px-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-sm">
+                                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </form>
+                            <?php endif; ?>
+
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
-        </div>
+        <?php endif; ?>
     </div>
-    
+
     <?php include __DIR__ . '/../user/rodape.php'; ?>
 
     <script>
         lucide.createIcons();
-
-        function editClient(client) {
-            document.getElementById('formAction').value = 'update';
-            document.getElementById('clientId').value = client.id;
-            document.getElementById('cName').value = client.nome;
-            document.getElementById('cEmail').value = client.email;
-            document.getElementById('formTitle').innerText = 'Editar Cliente #' + client.id;
-            document.getElementById('pwdLabel').innerText = '(deixe em branco para não alterar)';
-            document.getElementById('btnCancel').classList.remove('hidden');
-        }
-
-        function resetForm() {
-            document.getElementById('clientForm').reset();
-            document.getElementById('formAction').value = 'create';
-            document.getElementById('clientId').value = '';
-            document.getElementById('formTitle').innerText = 'Novo Registro';
-            document.getElementById('pwdLabel').innerText = '(obrigatório para novos)';
-            document.getElementById('btnCancel').classList.add('hidden');
-        }
     </script>
 </body>
 </html>
